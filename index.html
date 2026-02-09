@@ -3,215 +3,158 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Wedding Elite Pro | Live Dashboard</title>
+    <title>מנהל תקציב החתונה של אלעד</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.5.1/dist/confetti.browser.min.js"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Assistant:wght@200;400;700;800&family=Playfair+Display:ital,wght@1,600&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Assistant:wght@300;400;600;700&display=swap" rel="stylesheet">
     <style>
-        :root { --primary: #0f172a; --accent: #6366f1; --success: #10b981; }
-        body { font-family: 'Assistant', sans-serif; background: #fcfcfd; min-height: 100vh; color: #1e293b; }
-        .serif { font-family: 'Playfair Display', serif; }
-        .glass { background: rgba(255, 255, 255, 0.85); backdrop-filter: blur(12px); border: 1px solid rgba(255, 255, 255, 0.5); }
-        .category-card { transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1); border: 1px solid transparent; }
-        .category-card.open { background: white; border-color: #e2e8f0; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.03); }
-        .category-content { max-height: 0; overflow: hidden; transition: max-height 0.6s ease; }
-        .category-card.open .category-content { max-height: 3000px; padding-top: 2rem; }
-        .vendor-item { border-right: 5px solid #f1f5f9; transition: all 0.3s ease; }
-        .vendor-item.paid { border-right-color: var(--success); background-color: #f0fdf4; opacity: 0.85; }
-        #budgetChart { max-height: 200px; margin: 0 auto; filter: drop-shadow(0 10px 15px rgba(0,0,0,0.1)); }
+        body { font-family: 'Assistant', sans-serif; background-color: #f8fafc; }
+        .card { background: white; border-radius: 15px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); transition: transform 0.2s; }
+        .card:hover { transform: translateY(-5px); }
     </style>
 </head>
-<body onload="init()">
-
-    <nav class="glass px-8 py-5 sticky top-0 z-50 flex justify-between items-center shadow-sm">
-        <div class="flex items-center gap-4">
-            <div class="bg-slate-900 text-white w-10 h-10 flex items-center justify-center rounded-xl font-black text-lg shadow-lg">W</div>
-            <h1 class="text-xl font-extrabold tracking-tighter text-slate-900 italic">Wedding<span class="text-indigo-600 font-normal serif">Elite</span></h1>
+<body class="p-4 md:p-8">
+    <div class="max-w-5xl mx-auto">
+        <div class="flex justify-between items-center mb-8">
+            <h1 class="text-3xl font-bold text-slate-800">ניהול תקציב חתונה 💍</h1>
+            <div class="text-left">
+                <p class="text-sm text-slate-500">ברוך הבא, אלעד</p>
+            </div>
         </div>
-        <div class="text-left border-r pr-4 border-slate-100">
-            <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest leading-none">Creative Director</p>
-            <p class="font-bold text-slate-700 leading-tight">אלעד סויסה</p>
+
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+            <div class="card p-6 border-r-4 border-blue-500">
+                <p class="text-slate-500 text-sm">תקציב כולל</p>
+                <input type="number" id="total-budget-input" class="text-2xl font-bold text-slate-800 w-full focus:outline-none" onchange="updateTotalBudget(this.value)">
+            </div>
+            <div class="card p-6 border-r-4 border-red-500">
+                <p class="text-slate-500 text-sm">נוצל עד כה</p>
+                <p id="spent-amount" class="text-2xl font-bold text-red-600">₪0</p>
+            </div>
+            <div class="card p-6 border-r-4 border-green-500">
+                <p class="text-slate-500 text-sm">יתרה נותרת</p>
+                <p id="remaining-amount" class="text-2xl font-bold text-green-600">₪0</p>
+            </div>
         </div>
-    </nav>
 
-    <main class="max-w-7xl mx-auto p-6 lg:p-12 flex flex-col lg:flex-row gap-12">
-        <aside class="lg:w-96 space-y-6">
-            <div class="bg-[#0f172a] rounded-[3rem] p-10 text-white shadow-2xl relative overflow-hidden text-right">
-                <p class="text-[11px] font-bold opacity-40 mb-2 uppercase tracking-[0.2em] italic">יתרה שנותרה</p>
-                <p id="remainingBudget" class="text-5xl font-extrabold mb-10 tracking-tighter leading-none">₪0</p>
-                
-                <div class="relative mb-8">
-                    <canvas id="budgetChart"></canvas>
-                    <div class="absolute inset-0 flex flex-col items-center justify-center pointer-events-none mt-4">
-                        <span id="percentLabel" class="text-2xl font-black">0%</span>
-                        <span class="text-[9px] font-bold opacity-40 uppercase">ניצול</span>
-                    </div>
-                </div>
-
-                <div class="grid grid-cols-2 gap-4 pt-6 border-t border-white/10">
-                    <div class="p-4 rounded-2xl text-center bg-white/5 border border-white/10">
-                        <p class="text-[9px] font-bold opacity-50 uppercase mb-1">כמות מוזמנים</p>
-                        <input type="number" id="guestCount" oninput="calculateROI()" class="bg-transparent text-xl font-black w-full text-center outline-none text-indigo-400" value="250">
-                    </div>
-                    <div class="p-4 rounded-2xl text-center bg-indigo-500/10 border border-indigo-500/20">
-                        <p class="text-[9px] font-bold opacity-50 uppercase mb-1">כיסוי לאורח</p>
-                        <p id="giftPerGuest" class="text-xl font-black text-white italic">₪0</p>
-                    </div>
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            <div class="lg:col-span-2 card p-6 overflow-hidden">
+                <h2 class="text-xl font-semibold mb-4">מעקב ספקים</h2>
+                <div class="overflow-x-auto">
+                    <table class="w-full text-right">
+                        <thead>
+                            <tr class="border-b text-slate-400 text-sm">
+                                <th class="pb-3 font-medium">ספק / קטגוריה</th>
+                                <th class="pb-3 font-medium">סכום (₪)</th>
+                                <th class="pb-3 font-medium">סטטוס</th>
+                                <th class="pb-3 font-medium">פעולה</th>
+                            </tr>
+                        </thead>
+                        <tbody id="expense-table-body">
+                            </tbody>
+                    </table>
                 </div>
             </div>
 
-            <div class="bg-white p-8 rounded-[2.5rem] border border-slate-100 shadow-sm text-right">
-                <label class="block text-[10px] font-black text-slate-300 mb-4 uppercase italic">תקציב יעד כולל (₪)</label>
-                <div class="flex gap-3">
-                    <input type="number" id="targetBudgetInput" class="w-full bg-slate-50 border-none rounded-2xl p-4 font-bold text-slate-800 outline-none focus:ring-2 focus:ring-indigo-50 transition-all">
-                    <button onclick="updateTargetBudget()" class="bg-slate-900 text-white px-6 rounded-2xl font-bold hover:bg-black transition-all">✓</button>
-                </div>
+            <div class="card p-6 flex flex-col items-center justify-center">
+                <h2 class="text-xl font-semibold mb-4">התפלגות הוצאות</h2>
+                <canvas id="budgetChart" width="250" height="250"></canvas>
             </div>
-        </aside>
-
-        <section class="flex-1 space-y-8 text-right">
-            <header class="mb-12">
-                <p class="text-indigo-500/60 font-light italic serif text-lg mb-2 tracking-wide">
-                    "להפוך חלומות למציאות, שקל אחרי שקל."
-                </p>
-                <h2 class="text-5xl font-extrabold text-slate-900 mb-4 tracking-tighter italic">
-                    ניהול <span class="text-indigo-600 font-normal serif italic">המספרים.</span>
-                </h2>
-                <div class="h-1.5 w-24 bg-indigo-600 rounded-full"></div>
-            </header>
-            <div id="category-grid" class="space-y-6"></div>
-        </section>
-    </main>
+        </div>
+    </div>
 
     <script>
-        // הלינק החדש שלך מ-Render!
-        const API = "https://weddingplannerapp-i54n.onrender.com";
+        // הכתובת המעודכנת של ה-Backend שלך ב-Render
+        const API_URL = "https://weddingplannerapp-i54n.onrender.com";
+        let myChart;
 
-        let categories = {
-            "🏛️ המקום והאווירה": ["אולם אירועים", "עיצוב חופה", "תאורה והגברה", "בר בסיסי"],
-            "🍽️ קולינריה": ["קייטרינג", "בר אלכוהול משודרג", "עמדת מתוקים", "טעימות"],
-            "🎶 מוזיקה ובידור": ["DJ", "להקה חיה", "אפקטים"],
-            "📸 תיעוד ומדיה": ["צלם סטילס", "צלם וידאו", "רחפן", "מגנטים"],
-            "👰‍♀️ כלה וחתן": ["שמלת כלה", "חליפת חתן", "איפור ושיער", "טבעות"]
-        };
-
-        let myChart, totalSpent = 0;
-
-        async function init() {
-            render();
-            initChart();
-            await refreshUI();
-        }
-
-        function initChart() {
-            const ctx = document.getElementById('budgetChart').getContext('2d');
-            myChart = new Chart(ctx, {
-                type: 'doughnut',
-                data: {
-                    labels: Object.keys(categories),
-                    datasets: [{
-                        data: new Array(Object.keys(categories).length).fill(1),
-                        backgroundColor: ['#6366f1', '#10b981', '#f59e0b', '#f43f5e', '#8b5cf6'],
-                        borderWidth: 0, cutout: '85%'
-                    }]
-                },
-                options: { plugins: { legend: { display: false } }, responsive: true, maintainAspectRatio: false }
-            });
-        }
-
-        function render() {
-            const grid = document.getElementById('category-grid');
-            grid.innerHTML = Object.entries(categories).map(([name, subs], index) => `
-                <div class="category-card glass rounded-[2.5rem] p-8" id="cat-card-${index}">
-                    <div class="flex justify-between items-center cursor-pointer" onclick="toggleCard(${index})">
-                        <div class="flex items-center gap-4">
-                            <span class="text-2xl">${name.split(' ')[0]}</span>
-                            <h3 class="text-xl font-extrabold text-slate-800 tracking-tight">${name.split(' ').slice(1).join(' ')}</h3>
-                        </div>
-                        <span class="text-slate-200">▼</span>
-                    </div>
-                    <div class="category-content">
-                        <div class="space-y-4">
-                            ${subs.map(s => `
-                                <div class="vendor-item bg-white/40 p-6 rounded-[1.8rem] flex flex-col xl:flex-row items-center gap-6 shadow-sm" id="row-${s}">
-                                    <div class="flex items-center gap-5 flex-1 w-full font-bold text-slate-700 text-xl">
-                                        <input type="checkbox" onchange="checkAndCelebrate('${s}')" id="check-${s}" class="w-7 h-7 rounded-xl cursor-pointer accent-indigo-600">
-                                        <span>${s}</span>
-                                    </div>
-                                    <div class="flex items-end gap-3 w-full xl:w-auto">
-                                        <div class="w-32">
-                                            <span class="text-[9px] font-black text-indigo-400 mb-1 block">מחיר ₪</span>
-                                            <input type="number" id="amt-${s}" class="w-full p-3 bg-slate-50 rounded-xl font-black outline-none">
-                                        </div>
-                                        <button onclick="save('${s}')" class="bg-slate-900 text-white px-6 h-[52px] rounded-xl text-xs font-black hover:bg-indigo-700 transition-all shadow-lg">עדכן</button>
-                                    </div>
-                                </div>
-                            `).join('')}
-                        </div>
-                    </div>
-                </div>
-            `).join('');
-        }
-
-        async function refreshUI() {
+        async function fetchData() {
             try {
-                const res = await fetch(`${API}/budget/summary`);
-                const data = await res.json();
+                const response = await fetch(`${API_URL}/budget/summary`);
+                const data = await response.json();
                 
-                totalSpent = data.spent;
-                document.getElementById('remainingBudget').innerText = `₪${data.remaining.toLocaleString()}`;
-                document.getElementById('targetBudgetInput').value = data.total;
-                document.getElementById('percentLabel').innerText = `${Math.round((data.spent / data.total) * 100) || 0}%`;
-
-                const categorySums = Object.keys(categories).map(catName => {
-                    return data.expenses
-                        .filter(e => categories[catName].includes(e.category))
-                        .reduce((sum, e) => sum + e.amount, 0);
-                });
-
-                myChart.data.datasets[0].data = categorySums.every(v => v === 0) ? new Array(5).fill(1) : categorySums;
-                myChart.update();
-                calculateROI();
-
-                data.expenses.forEach(e => {
-                    const amt = document.getElementById(`amt-${e.category}`);
-                    const row = document.getElementById(`row-${e.category}`);
-                    const check = document.getElementById(`check-${e.category}`);
-                    if(amt) amt.value = e.amount;
-                    if(check) check.checked = e.is_paid;
-                    if(row && e.is_paid) row.classList.add('paid');
-                    else if(row) row.classList.remove('paid');
-                });
-            } catch(e) { console.error("API Error:", e); }
+                document.getElementById('total-budget-input').value = data.total;
+                document.getElementById('spent-amount').innerText = `₪${data.spent.toLocaleString()}`;
+                document.getElementById('remaining-amount').innerText = `₪${data.remaining.toLocaleString()}`;
+                
+                renderTable(data.expenses);
+                updateChart(data.expenses);
+            } catch (error) {
+                console.error("Error fetching data:", error);
+            }
         }
 
-        async function checkAndCelebrate(cat) {
-            await fetch(`${API}/budget/toggle_paid?category=${encodeURIComponent(cat)}`, { method: 'POST' });
-            confetti({ particleCount: 150, spread: 70, origin: { y: 0.6 }, colors: ['#6366f1', '#10b981'] });
-            refreshUI();
-        }
+        function renderTable(expenses) {
+            const categories = ["קולינריה", "צילום", "מוזיקה", "עיצוב", "ביגוד"];
+            const tbody = document.getElementById('expense-table-body');
+            tbody.innerHTML = '';
 
-        async function save(cat) {
-            await fetch(`${API}/budget/add`, {
-                method: 'POST',
-                headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify({ category: cat, amount: parseFloat(document.getElementById(`amt-${cat}`).value) || 0 })
+            categories.forEach(cat => {
+                const expense = expenses.find(e => e.category === cat) || { amount: 0, is_paid: false };
+                const row = document.createElement('tr');
+                row.className = "border-b last:border-0 hover:bg-slate-50";
+                row.innerHTML = `
+                    <td class="py-4 font-medium text-slate-700">${cat}</td>
+                    <td class="py-4">
+                        <input type="number" value="${expense.amount}" 
+                            class="w-24 border rounded px-2 py-1 focus:ring-2 focus:ring-blue-200 outline-none"
+                            onchange="addExpense('${cat}', this.value)">
+                    </td>
+                    <td class="py-4">
+                        <span class="${expense.is_paid ? 'text-green-600 bg-green-50' : 'text-orange-600 bg-orange-50'} px-2 py-1 rounded text-xs font-bold cursor-pointer"
+                              onclick="togglePaid('${cat}')">
+                            ${expense.is_paid ? '✓ שולם' : '● ממתין'}
+                        </span>
+                    </td>
+                    <td class="py-4">
+                         <button onclick="confettiCheck('${cat}', ${expense.is_paid})" class="text-slate-300 hover:text-blue-500">✨</button>
+                    </td>
+                `;
+                tbody.appendChild(row);
             });
-            refreshUI();
         }
 
-        async function updateTargetBudget() {
-            await fetch(`${API}/budget/update_total?amount=${document.getElementById('targetBudgetInput').value}`, { method: 'POST' });
-            refreshUI();
+        async function addExpense(category, amount) {
+            await fetch(`${API_URL}/budget/add`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ category, amount: parseFloat(amount) })
+            });
+            fetchData();
         }
 
-        function calculateROI() {
-            const guests = parseInt(document.getElementById('guestCount').value) || 1;
-            document.getElementById('giftPerGuest').innerText = `₪${Math.round(totalSpent / guests).toLocaleString()}`;
+        async function togglePaid(category) {
+            await fetch(`${API_URL}/budget/toggle_paid?category=${category}`, { method: 'POST' });
+            confetti({ particleCount: 150, spread: 70, origin: { y: 0.6 } });
+            fetchData();
         }
 
-        function toggleCard(index) { document.getElementById(`cat-card-${index}`).classList.toggle('open'); }
+        async function updateTotalBudget(amount) {
+            await fetch(`${API_URL}/budget/update_total?amount=${amount}`, { method: 'POST' });
+            fetchData();
+        }
+
+        function updateChart(expenses) {
+            const ctx = document.getElementById('budgetChart').getContext('2d');
+            const data = {
+                labels: expenses.map(e => e.category),
+                datasets: [{
+                    data: expenses.map(e => e.amount),
+                    backgroundColor: ['#3b82f6', '#ef4444', '#10b981', '#f59e0b', '#8b5cf6']
+                }]
+            };
+
+            if (myChart) myChart.destroy();
+            myChart = new Chart(ctx, { type: 'doughnut', data: data, options: { cutout: '70%' } });
+        }
+
+        function confettiCheck(cat, isPaid) {
+            if(isPaid) confetti({ particleCount: 100, spread: 70, origin: { y: 0.6 } });
+        }
+
+        // Initial load
+        fetchData();
     </script>
 </body>
 </html>
