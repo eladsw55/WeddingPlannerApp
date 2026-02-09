@@ -1,5 +1,4 @@
 from sqlalchemy import Column, Integer, String, Float, Boolean
-# התיקון: ייבוא ישיר ללא נקודה
 from database import Base
 
 class Expense(Base):
