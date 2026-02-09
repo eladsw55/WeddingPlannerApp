@@ -1,0 +1,68 @@
+from fastapi import FastAPI, Depends
+from fastapi.middleware.cors import CORSMiddleware
+from sqlalchemy.orm import Session
+from pydantic import BaseModel
+from . import models, database
+from .database import engine, SessionLocal
+
+models.Base.metadata.create_all(bind=engine)
+app = FastAPI()
+
+app.add_middleware(CORSMiddleware, allow_origins=["*"], allow_methods=["*"], allow_headers=["*"])
+
+def get_db():
+    db = SessionLocal(); yield db; db.close()
+
+class ExpenseCreate(BaseModel):
+    category: str
+    amount: float
+    notes: str = ""
+
+@app.get("/budget/summary")
+def get_summary(db: Session = Depends(get_db)):
+    expenses = db.query(models.Expense).all()
+    # שליפת תקציב היעד ממסד הנתונים (או יצירת ברירת מחדל)
+    budget_record = db.query(models.Budget).first()
+    if not budget_record:
+        budget_record = models.Budget(total_amount=100000)
+        db.add(budget_record)
+        db.commit()
+    
+    total = budget_record.total_amount
+    spent = sum(e.amount for e in expenses)
+    return {
+        "total": total,
+        "spent": spent,
+        "remaining": total - spent,
+        "expenses": [{"category": e.category, "amount": e.amount, "is_paid": e.is_paid, "notes": e.notes} for e in expenses]
+    }
+
+@app.post("/budget/update_total")
+def update_total(amount: float, db: Session = Depends(get_db)):
+    budget_record = db.query(models.Budget).first()
+    if budget_record:
+        budget_record.total_amount = amount
+    else:
+        budget_record = models.Budget(total_amount=amount)
+        db.add(budget_record)
+    db.commit()
+    return {"status": "success"}
+
+@app.post("/budget/add")
+def add_expense(expense: ExpenseCreate, db: Session = Depends(get_db)):
+    existing = db.query(models.Expense).filter(models.Expense.category == expense.category).first()
+    if existing:
+        existing.amount = expense.amount
+        existing.notes = expense.notes
+    else:
+        db.add(models.Expense(category=expense.category, amount=expense.amount, notes=expense.notes))
+    db.commit()
+    return {"status": "success"}
+
+@app.post("/budget/toggle_paid")
+def toggle_paid(category: str, db: Session = Depends(get_db)):
+    expense = db.query(models.Expense).filter(models.Expense.category == category).first()
+    if expense:
+        expense.is_paid = not expense.is_paid
+        db.commit()
+    return {"status": "success"}
