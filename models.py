@@ -1,18 +1,16 @@
-import enum
-from sqlalchemy import Column, Integer, String, Enum as SAEnum, DateTime, Boolean, Float
-from sqlalchemy.sql import func
-from .database import Base
+from sqlalchemy import Column, Integer, String, Float, Boolean
+# התיקון: ייבוא ישיר ללא נקודה
+from database import Base
 
 class Expense(Base):
     __tablename__ = "expenses"
     id = Column(Integer, primary_key=True, index=True)
-    category = Column(String, nullable=False) # שם הסעיף (DJ, רחפן וכו')
-    amount = Column(Float, nullable=False)
-    notes = Column(String, nullable=True)     # הערות אישיות בעברית
-    is_paid = Column(Boolean, default=False)  # האם שולם
-    created_at = Column(DateTime(timezone=True), server_default=func.now())
+    category = Column(String, unique=True, index=True)
+    amount = Column(Float, default=0.0)
+    is_paid = Column(Boolean, default=False)
+    notes = Column(String, default="")
 
 class Budget(Base):
     __tablename__ = "budget"
     id = Column(Integer, primary_key=True, index=True)
-    total_amount = Column(Integer, default=100000)
+    total_amount = Column(Float, default=100000.0)
