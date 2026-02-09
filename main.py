@@ -2,24 +2,24 @@ from fastapi import FastAPI, Depends
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy.orm import Session
 from pydantic import BaseModel
-# התיקון הקריטי: הסרת הנקודות כדי שהייבוא יעבוד ב-Render
-import models, database
+import models
+import database
 from database import engine, SessionLocal
 
-# יצירת טבלאות במסד הנתונים
+# יצירת הטבלאות במסד הנתונים בעת הרצת האפליקציה
 models.Base.metadata.create_all(bind=engine)
 
 app = FastAPI()
 
-# הגדרת CORS כדי שה-HTML יוכל לדבר עם השרת בענן
+# הגדרת CORS כדי שה-HTML המעוצב שלך יוכל לתקשר עם השרת ב-Render
 app.add_middleware(
-    CORSMiddleware, 
-    allow_origins=["*"], 
-    allow_methods=["*"], 
-    allow_headers=["*"]
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_methods=["*"],
+    allow_headers=["*"],
 )
 
-# פונקציית עזר לקבלת חיבור למסד הנתונים
+# פונקציה לקבלת Session של מסד הנתונים
 def get_db():
     db = SessionLocal()
     try:
@@ -27,6 +27,7 @@ def get_db():
     finally:
         db.close()
 
+# מודל נתונים עבור ה-API
 class ExpenseCreate(BaseModel):
     category: str
     amount: float
@@ -37,7 +38,7 @@ def get_summary(db: Session = Depends(get_db)):
     expenses = db.query(models.Expense).all()
     budget_record = db.query(models.Budget).first()
     
-    # אתחול תקציב ברירת מחדל אם אין עדיין רשומה
+    # אתחול תקציב ברירת מחדל אם המערכת חדשה
     if not budget_record:
         budget_record = models.Budget(total_amount=100000)
         db.add(budget_record)
@@ -51,14 +52,7 @@ def get_summary(db: Session = Depends(get_db)):
         "total": total,
         "spent": spent,
         "remaining": total - spent,
-        "expenses": [
-            {
-                "category": e.category, 
-                "amount": e.amount, 
-                "is_paid": e.is_paid, 
-                "notes": e.notes
-            } for e in expenses
-        ]
+        "expenses": [{"category": e.category, "amount": e.amount, "is_paid": e.is_paid, "notes": e.notes} for e in expenses]
     }
 
 @app.post("/budget/update_total")
@@ -79,11 +73,7 @@ def add_expense(expense: ExpenseCreate, db: Session = Depends(get_db)):
         existing.amount = expense.amount
         existing.notes = expense.notes
     else:
-        db.add(models.Expense(
-            category=expense.category, 
-            amount=expense.amount, 
-            notes=expense.notes
-        ))
+        db.add(models.Expense(category=expense.category, amount=expense.amount, notes=expense.notes))
     db.commit()
     return {"status": "success"}
 
