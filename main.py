@@ -2,17 +2,15 @@ from fastapi import FastAPI, Depends
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy.orm import Session
 from pydantic import BaseModel
-# התיקון הקריטי: ייבוא ישיר ללא נקודות
+# ייבוא ישיר עבור הסביבה של Render
 import models
 import database
 from database import engine, SessionLocal
 
-# יצירת הטבלאות במסד הנתונים
 models.Base.metadata.create_all(bind=engine)
 
 app = FastAPI()
 
-# הגדרת CORS כדי שה-HTML המעוצב שלך יוכל לתקשר עם השרת
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -20,7 +18,6 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# פונקציה לקבלת Session של מסד הנתונים
 def get_db():
     db = SessionLocal()
     try:
@@ -37,7 +34,6 @@ class ExpenseCreate(BaseModel):
 def get_summary(db: Session = Depends(get_db)):
     expenses = db.query(models.Expense).all()
     budget_record = db.query(models.Budget).first()
-    
     if not budget_record:
         budget_record = models.Budget(total_amount=100000)
         db.add(budget_record)
@@ -46,7 +42,6 @@ def get_summary(db: Session = Depends(get_db)):
     
     total = budget_record.total_amount
     spent = sum(e.amount for e in expenses)
-    
     return {
         "total": total,
         "spent": spent,
