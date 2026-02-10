@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Wedding Elite Pro | Final Fix</title>
+    <title>Wedding Elite Pro | Official Dashboard</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Assistant:wght@300;400;700&display=swap" rel="stylesheet">
@@ -38,7 +38,9 @@
 
         <div class="grid grid-cols-1 lg:grid-cols-12 gap-10">
             <div id="cat-list" class="lg:col-span-7 space-y-4">
-                <h1 class="text-4xl font-black text-slate-800 mb-8 px-2 italic">ניהול <span class="text-indigo-600">החגיגה.</span></h1>
+                <div class="flex justify-between items-center px-2 mb-6">
+                    <h1 class="text-4xl font-black text-slate-800 italic uppercase">ניהול <span class="text-indigo-600">החגיגה.</span></h1>
+                </div>
             </div>
 
             <div class="lg:col-span-5">
@@ -58,14 +60,14 @@
 
                     <div class="w-full space-y-4">
                         <div class="bg-white/5 border border-white/10 p-5 rounded-3xl">
-                            <p class="text-gray-400 text-[10px] uppercase font-bold mb-1">תקציב יעד כולל</p>
+                            <p class="text-gray-400 text-[10px] uppercase font-bold mb-1 text-right">תקציב יעד כולל</p>
                             <div class="flex gap-2">
-                                <input id="total-target" type="number" class="bg-transparent text-2xl font-black w-full outline-none text-white" placeholder="הזן תקציב">
+                                <input id="total-target" type="number" class="bg-transparent text-2xl font-black w-full outline-none text-white text-right" placeholder="הזן תקציב">
                                 <button onclick="updateBudgetTotal()" class="bg-emerald-500 px-4 py-1 rounded-xl text-xs font-bold shadow-md">עדכן ✅</button>
                             </div>
                         </div>
                         <div class="grid grid-cols-2 gap-4">
-                            <div class="bg-gray-800/50 p-4 rounded-2xl text-center"><p class="text-gray-400 text-[10px] uppercase mb-1">כיסוי לאורח</p><p id="guest-cost" class="text-xl font-bold italic">₪0</p></div>
+                            <div class="bg-gray-800/50 p-4 rounded-2xl text-center"><p class="text-gray-400 text-[10px] uppercase mb-1">כיסוי לאורח</p><p id="guest-cost" class="text-xl font-bold italic text-white">₪0</p></div>
                             <div class="bg-gray-800/50 p-4 rounded-2xl text-center"><p class="text-gray-400 text-[10px] uppercase mb-1">מוזמנים</p><input id="guest-count" type="number" onchange="updateUI()" class="bg-transparent text-xl font-bold text-indigo-400 w-full text-center outline-none" value="400"></div>
                         </div>
                     </div>
@@ -78,15 +80,18 @@
         const API = "https://weddingplannerapp-i54n.onrender.com";
         let myChart;
         let localData = { spent: 0, total: 0 };
+
         const cats = [
-            { name: 'המקום והאווירה', icon: '🏛️', items: ['אולם', 'עיצוב', 'בר'] },
-            { name: 'מדיה ובידור', icon: '📷', items: ['DJ', 'צלם', 'מגנטים'] },
-            { name: 'קולינריה', icon: '🍽️', items: ['קייטרינג', 'אלכוהול', 'מתוקים'] }
+            { name: 'המקום והאווירה', icon: '🏛️', items: ['אולם אירועים', 'עיצוב חופה', 'תאורה והגברה', 'בר בסיסי'] },
+            { name: 'קולינריה', icon: '🍽️', items: ['קייטרינג', 'בר אלכוהול משודרג', 'עמדת מתוקים', 'טעימות'] },
+            { name: 'מוזיקה ובידור', icon: '🎵', items: ['DJ', 'להקת קבלת פנים', 'אטרקציות ואפקטים'] },
+            { name: 'תיעוד ומדיה', icon: '📷', items: ['צלם סטילס', 'צלם וידאו', 'רחפן', 'מגנטים'] },
+            { name: 'כלה וחתן', icon: '👰🤵', items: ['שמלת כלה', 'חליפת חתן', 'איפור ושיער', 'טבעות'] }
         ];
 
         function render() {
             const container = document.getElementById('cat-list');
-            container.innerHTML = '<h1 class="text-4xl font-black text-slate-800 mb-8 px-2 italic">ניהול <span class="text-indigo-600">החגיגה.</span></h1>';
+            container.innerHTML = '<h1 class="text-4xl font-black text-slate-800 mb-8 px-2 italic uppercase">ניהול <span class="text-indigo-600">החגיגה.</span></h1>';
             cats.forEach((c, i) => {
                 const id = `list-${i}`;
                 container.innerHTML += `
@@ -115,11 +120,6 @@
         async function saveExp(cat, inputId, noteId) {
             const amount = parseFloat(document.getElementById(inputId).value) || 0;
             const note = document.getElementById(noteId).value;
-            
-            // עדכון מיידי ב-UI לפני הקריאה לשרת (Optimistic UI)
-            localData.spent += amount;
-            updateUI();
-
             await fetch(`${API}/budget/add`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -130,26 +130,18 @@
 
         async function updateBudgetTotal() {
             const amount = parseFloat(document.getElementById('total-target').value) || 0;
-            
-            // עדכון מיידי של ה-State המקומי כדי לראות שינוי ביתרה
             localData.total = amount;
             updateUI();
-            
-            // שליחה לשרת כפרמטר URL בדיוק כמו שה-FastAPI מצפה
-            await fetch(`${API}/budget/update_total?amount=${amount}`, {
-                method: 'POST'
-            });
+            await fetch(`${API}/budget/update_total?amount=${amount}`, { method: 'POST' });
             refreshFromServer();
         }
 
         async function refreshFromServer() {
             try {
                 const res = await fetch(`${API}/budget/summary`);
-                const data = await res.json();
-                localData.total = data.total;
-                localData.spent = data.spent;
+                localData = await res.json();
                 updateUI();
-            } catch (e) { console.error("Syncing..."); }
+            } catch (e) { console.error("Sync Error"); }
         }
 
         function updateUI() {
@@ -171,7 +163,7 @@
             myChart = new Chart(ctx, {
                 type: 'doughnut',
                 data: { datasets: [{ data: [s, r > 0 ? r : 0], backgroundColor: ['#4f46e5', '#334155'], borderWidth: 0 }] },
-                options: { cutout: '85%', plugins: { legend: { display: false } }, animation: { duration: 500 } }
+                options: { cutout: '85%', plugins: { legend: { display: false } } }
             });
         }
 
