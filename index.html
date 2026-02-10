@@ -8,67 +8,81 @@
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Assistant:wght@300;400;700;800&display=swap" rel="stylesheet">
     <style>
-        body { font-family: 'Assistant', sans-serif; background: #f1f5f9; }
+        body { font-family: 'Assistant', sans-serif; background: #f8fafc; }
         .glass { background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(10px); border-radius: 24px; box-shadow: 0 10px 30px rgba(0,0,0,0.05); }
         .tab-active { background: #4f46e5; color: white; transform: translateY(-2px); box-shadow: 0 5px 15px rgba(79, 70, 229, 0.3); }
         .hidden { display: none; }
+        .ai-bubble { animation: popIn 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
+        @keyframes popIn { from { transform: scale(0.8); opacity: 0; } to { transform: scale(1); opacity: 1; } }
     </style>
 </head>
 <body class="p-4 md:p-8 min-h-screen">
 
     <div class="max-w-4xl mx-auto">
-        <div class="flex gap-2 mb-8 bg-white/50 p-1.5 rounded-3xl shadow-inner">
+        <div class="flex gap-2 mb-6 bg-white/50 p-1.5 rounded-3xl shadow-inner">
             <button onclick="switchTab('tab-budget')" id="btn-budget" class="flex-1 py-4 rounded-2xl font-black text-sm transition-all tab-active">💰 תקציב</button>
             <button onclick="switchTab('tab-guests')" id="btn-guests" class="flex-1 py-4 rounded-2xl font-black text-sm transition-all text-slate-500">👥 אורחים</button>
             <button onclick="switchTab('tab-tasks')" id="btn-tasks" class="flex-1 py-4 rounded-2xl font-black text-sm transition-all text-slate-500">✅ משימות</button>
         </div>
 
+        <div id="ai-panel" class="mb-6 hidden">
+            <div class="glass p-4 border-2 border-indigo-100 flex items-start gap-4 ai-bubble bg-indigo-50">
+                <div class="text-3xl">🤖</div>
+                <div>
+                    <p class="text-[10px] font-bold text-indigo-400 uppercase tracking-tighter">העוזר החכם של Wedding Elite</p>
+                    <p id="ai-text" class="text-sm font-bold text-slate-700 mt-1">עדכן סעיף בתקציב כדי לקבל ניתוח חכם...</p>
+                </div>
+            </div>
+        </div>
+
         <div id="tab-budget" class="space-y-6">
-            <div class="glass p-8 bg-slate-900 text-white text-center">
+            <div class="glass p-8 bg-slate-900 text-white text-center relative overflow-hidden">
                 <p class="text-indigo-400 text-[10px] font-bold uppercase tracking-widest mb-2">יתרה לשימוש</p>
-                <h2 id="rem-budget" class="text-5xl font-black mb-4">₪0</h2>
+                <h2 id="rem-budget" class="text-5xl font-black mb-4 tracking-tighter">₪0</h2>
                 <div class="flex justify-center gap-6">
                     <div><p id="pct-val" class="text-xl font-bold">0%</p><p class="text-[8px] text-slate-400 uppercase">ניצול</p></div>
                     <div class="w-[1px] bg-slate-700 h-8"></div>
-                    <div><input id="total-input" type="number" onchange="updateTotal()" class="bg-transparent text-xl font-bold w-24 text-center outline-none" placeholder="₪0"><p class="text-[8px] text-slate-400 uppercase tracking-tighter">תקציב יעד (לחץ לעריכה)</p></div>
+                    <div><input id="total-input" type="number" onchange="updateTotal()" class="bg-transparent text-xl font-bold w-24 text-center outline-none border-b border-slate-700 focus:border-indigo-400" placeholder="₪0"><p class="text-[8px] text-slate-400 uppercase tracking-tighter">תקציב יעד</p></div>
                 </div>
             </div>
-            <div id="budget-items" class="space-y-3"></div>
+            
+            <div id="budget-items" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                </div>
         </div>
 
         <div id="tab-guests" class="hidden space-y-6">
             <div class="grid grid-cols-3 gap-3">
                 <div class="glass p-4 text-center">
                     <p id="g-confirmed" class="text-2xl font-black text-emerald-600">0</p>
-                    <p class="text-[10px] text-slate-400 font-bold uppercase">מגיעים</p>
+                    <p class="text-[10px] text-slate-400 font-bold uppercase italic">מגיעים</p>
                 </div>
                 <div class="glass p-4 text-center">
                     <p id="g-total" class="text-2xl font-black text-slate-800">0</p>
-                    <p class="text-[10px] text-slate-400 font-bold uppercase">מוזמנים</p>
+                    <p class="text-[10px] text-slate-400 font-bold uppercase italic">מוזמנים</p>
                 </div>
                 <div class="glass p-4 text-center">
                     <p id="g-maybe" class="text-2xl font-black text-amber-500">0</p>
-                    <p class="text-[10px] text-slate-400 font-bold uppercase">אולי</p>
+                    <p class="text-[10px] text-slate-400 font-bold uppercase italic">אולי</p>
                 </div>
             </div>
-            <div class="glass p-6">
-                <h3 class="font-bold mb-4">הוספת אורח חדש</h3>
+            <div class="glass p-6 bg-white">
+                <h3 class="font-bold mb-4 flex items-center gap-2"><span>👥</span> הוספת אורח חדש</h3>
                 <div class="grid grid-cols-2 gap-3 mb-4">
-                    <input id="g-name" type="text" placeholder="שם האורח" class="col-span-2 p-3 bg-slate-100 rounded-xl outline-none focus:ring-2 ring-indigo-500">
-                    <input id="g-qty" type="number" placeholder="כמות" class="p-3 bg-slate-100 rounded-xl outline-none" value="1">
-                    <select id="g-side" class="p-3 bg-slate-100 rounded-xl outline-none">
+                    <input id="g-name" type="text" placeholder="שם האורח / משפחה" class="col-span-2 p-3 bg-slate-50 rounded-xl outline-none focus:ring-2 ring-indigo-500 border border-slate-100 text-sm">
+                    <input id="g-qty" type="number" placeholder="כמות" class="p-3 bg-slate-50 rounded-xl outline-none border border-slate-100 text-sm" value="1">
+                    <select id="g-side" class="p-3 bg-slate-50 rounded-xl outline-none border border-slate-100 text-sm">
                         <option value="חתן">צד חתן</option>
                         <option value="כלה">צד כלה</option>
                     </select>
                 </div>
-                <button onclick="addGuest()" class="w-full bg-indigo-600 text-white py-3 rounded-xl font-bold shadow-lg">הוסף לרשימה ✨</button>
+                <button onclick="addGuest()" class="w-full bg-indigo-600 text-white py-3 rounded-xl font-bold shadow-lg hover:bg-indigo-700 transition">הוסף לרשימה ✨</button>
             </div>
             <div id="guest-list" class="space-y-3"></div>
         </div>
 
         <div id="tab-tasks" class="hidden space-y-6">
             <div class="glass p-6">
-                <h3 class="text-xl font-black text-slate-800 mb-6">משימות לביצוע 🕊️</h3>
+                <h3 class="text-xl font-black text-slate-800 mb-6 flex items-center gap-2"><span>✅</span> משימות חובה לדרך</h3>
                 <div id="tasks-list" class="space-y-3"></div>
             </div>
         </div>
@@ -76,7 +90,18 @@
 
     <script>
         const API = "https://weddingplannerapp-i54n.onrender.com"; // וודא שזה ה-URL שלך
-        let data = { budget: {}, guests: [], tasks: [] };
+        let data = { budget_summary: {}, budget_items: [], guests: [], tasks: [] };
+
+        // Knowledge Base - מחירי שוק ממוצעים 2026
+        const marketPrices = {
+            "אולם אירועים": { avg: 450, type: "per_guest" },
+            "DJ": { avg: 9000, range: [7000, 13000] },
+            "צלם": { avg: 12000, range: [10000, 18000] },
+            "שמלת כלה": { avg: 8000, range: [5000, 12000] },
+            "חליפת חתן": { avg: 3000, range: [1500, 5000] }
+        };
+
+        const budgetCats = ["אולם אירועים", "DJ", "צלם", "שמלת כלה", "חליפת חתן", "איפור ושיער", "עיצוב חופה"];
 
         function switchTab(tabId) {
             document.querySelectorAll('[id^="tab-"]').forEach(el => el.classList.add('hidden'));
@@ -84,6 +109,9 @@
             document.querySelectorAll('[id^="btn-"]').forEach(btn => btn.classList.remove('tab-active', 'text-slate-500'));
             const activeBtn = document.getElementById('btn-' + tabId.split('-')[1]);
             activeBtn.classList.add('tab-active');
+            
+            // הצג AI רק בתקציב
+            document.getElementById('ai-panel').style.display = tabId === 'tab-budget' ? 'block' : 'none';
         }
 
         async function refresh() {
@@ -93,9 +121,42 @@
                     fetch(`${API}/guests`).then(r => r.json()),
                     fetch(`${API}/tasks`).then(r => r.json())
                 ]);
-                data = { budget: b, guests: g, tasks: t };
+                data = { budget_summary: b, guests: g, tasks: t };
                 render();
             } catch(e) { console.error("Sync Error"); }
+        }
+
+        async function updateBudgetItem(cat, amount) {
+            await fetch(`${API}/budget/add`, {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({category: cat, amount: amount, notes: ""})
+            });
+            refresh();
+            getAIAdvice(cat, amount);
+        }
+
+        function getAIAdvice(cat, amount) {
+            const aiText = document.getElementById('ai-text');
+            const panel = document.getElementById('ai-panel');
+            panel.classList.remove('hidden');
+            
+            if (marketPrices[cat]) {
+                const market = marketPrices[cat];
+                if (amount === 0) {
+                    aiText.innerText = `עדיין לא הזנת תקציב ל-${cat}. כדאי לתכנן מראש!`;
+                } else if (market.range) {
+                    if (amount < market.range[0]) {
+                        aiText.innerText = `וואו אלעד! ${amount}₪ ל-${cat} זה מחיר מדהים. תוודא רק שסגרת חוזה מסודר! 💸`;
+                    } else if (amount > market.range[1]) {
+                        aiText.innerText = `שים לב, ${amount}₪ ל-${cat} זה מעל הממוצע. בדקת אופציות נוספות? 🤔`;
+                    } else {
+                        aiText.innerText = `מחיר של ${amount}₪ ל-${cat} הוא בול בממוצע השוק. עסקה הוגנת! ✅`;
+                    }
+                }
+            } else {
+                aiText.innerText = `יופי אלעד, הוספת את ${cat} לתקציב. כל סגירה מקרבת אתכם לחופה! 🕊️`;
+            }
         }
 
         async function updateTotal() {
@@ -125,20 +186,32 @@
         }
 
         function render() {
-            // Render Budget
-            document.getElementById('rem-budget').innerText = `₪${(data.budget.total - data.budget.spent).toLocaleString()}`;
-            document.getElementById('total-input').value = data.budget.total;
-            document.getElementById('pct-val').innerText = `${Math.round((data.budget.spent/data.budget.total)*100 || 0)}%`;
+            const sum = data.budget_summary;
+            document.getElementById('rem-budget').innerText = `₪${(sum.total - sum.spent).toLocaleString()}`;
+            document.getElementById('total-input').value = sum.total;
+            document.getElementById('pct-val').innerText = `${Math.round((sum.spent/sum.total)*100 || 0)}%`;
             
+            // Render Budget Items
+            const bList = document.getElementById('budget-items');
+            bList.innerHTML = budgetCats.map(cat => `
+                <div class="glass p-4 bg-white border border-slate-100 transition hover:border-indigo-200">
+                    <div class="flex justify-between items-center mb-2">
+                        <span class="font-bold text-slate-700">${cat}</span>
+                        <input type="number" onblur="updateBudgetItem('${cat}', this.value)" 
+                               class="w-24 text-center bg-slate-50 p-1 rounded-lg border border-slate-200 outline-none focus:ring-2 ring-indigo-500 font-bold" 
+                               placeholder="₪0">
+                    </div>
+                </div>
+            `).join('');
+
             // Render Guests
             let confirmed = 0, total = 0;
-            const gList = document.getElementById('guest-list');
-            gList.innerHTML = data.guests.map(g => {
+            document.getElementById('guest-list').innerHTML = data.guests.map(g => {
                 total += g.count;
                 if(g.status === 'confirmed') confirmed += g.count;
-                return `<div class="glass p-4 flex justify-between items-center">
-                            <div><p class="font-bold">${g.name} (${g.count})</p><p class="text-[10px] text-slate-400 font-bold">${g.side}</p></div>
-                            <span class="bg-emerald-100 text-emerald-700 text-[10px] font-bold px-2 py-1 rounded-full uppercase">מגיע</span>
+                return `<div class="glass p-4 flex justify-between items-center bg-white border border-slate-100">
+                            <div><p class="font-bold text-slate-800">${g.name} <span class="text-indigo-500">(${g.count})</span></p><p class="text-[10px] text-slate-400 font-bold uppercase tracking-widest">${g.side}</p></div>
+                            <span class="bg-emerald-50 text-emerald-600 text-[10px] font-black px-3 py-1 rounded-full border border-emerald-100 uppercase">מגיע</span>
                         </div>`;
             }).join('');
             document.getElementById('g-confirmed').innerText = confirmed;
@@ -146,14 +219,15 @@
 
             // Render Tasks
             document.getElementById('tasks-list').innerHTML = data.tasks.map(t => `
-                <div onclick="toggleTask(${t.id})" class="flex items-center gap-4 p-4 glass cursor-pointer border-2 ${t.completed ? 'border-emerald-500 opacity-60' : 'border-transparent'}">
+                <div onclick="toggleTask(${t.id})" class="flex items-center gap-4 p-4 glass cursor-pointer border-2 transition ${t.completed ? 'border-emerald-500 bg-emerald-50/50' : 'border-transparent bg-white'}">
                     <div class="w-6 h-6 rounded-full border-2 ${t.completed ? 'bg-emerald-500 border-emerald-500' : 'border-slate-300'} flex items-center justify-center text-white text-xs">${t.completed ? '✓' : ''}</div>
-                    <span class="${t.completed ? 'line-through text-slate-400' : 'font-bold text-slate-700'}">${t.title}</span>
+                    <span class="${t.completed ? 'line-through text-slate-400 font-normal' : 'font-bold text-slate-700'}">${t.title}</span>
                 </div>
             `).join('');
         }
 
         refresh();
+        switchTab('tab-budget');
     </script>
 </body>
 </html>
