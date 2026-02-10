@@ -33,8 +33,10 @@ class ExpenseCreate(BaseModel):
 def get_summary(db: Session = Depends(get_db)):
     expenses = db.query(models.Expense).all()
     budget_record = db.query(models.Budget).first()
+    
+    # אם אין תקציב ב-DB, ניצור אחד ריק ולא ננחש סכום
     if not budget_record:
-        budget_record = models.Budget(total_amount=180000)
+        budget_record = models.Budget(total_amount=0)
         db.add(budget_record)
         db.commit()
         db.refresh(budget_record)
