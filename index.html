@@ -3,101 +3,202 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Wedding Elite Pro | AI Planner</title>
+    <title>Wedding Elite | AI Planner</title>
+    
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Assistant:wght@300;400;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Assistant:wght@300;400;600;700;800&display=swap" rel="stylesheet">
+    
     <style>
-        body { font-family: 'Assistant', sans-serif; background: linear-gradient(rgba(255,255,255,0.4), rgba(255,255,255,0.4)), url('https://images.unsplash.com/photo-1519741497674-611481863552?ixlib=rb-4.0.3&auto=format&fit=crop&w=1920&q=80'); background-size: cover; background-attachment: fixed; }
-        .glass-card { background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(12px); border-radius: 30px; border: 1px solid rgba(255,255,255,0.3); box-shadow: 0 10px 30px rgba(0,0,0,0.05); }
-        .dark-stats { background: #1a2233; color: white; border-radius: 35px; position: relative; display: flex; flex-direction: column; align-items: center; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5); }
+        /* הגדרות בסיס */
+        body { 
+            font-family: 'Assistant', sans-serif; 
+            background: linear-gradient(rgba(255,255,255,0.4), rgba(255,255,255,0.4)), url('https://images.unsplash.com/photo-1519741497674-611481863552?ixlib=rb-4.0.3&auto=format&fit=crop&w=1920&q=80'); 
+            background-size: cover; 
+            background-attachment: fixed;
+            overflow-x: hidden;
+        }
+
+        /* עיצוב הזכוכית (Glassmorphism) */
+        .glass-card { 
+            background: rgba(255, 255, 255, 0.95); 
+            backdrop-filter: blur(20px); 
+            border-radius: 24px; 
+            border: 1px solid rgba(255,255,255,0.5); 
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1); 
+        }
+
+        /* הלוח הכהה */
+        .dark-stats { 
+            background: #0f172a; 
+            color: white; 
+            border-radius: 32px; 
+            position: relative; 
+            display: flex; 
+            flex-direction: column; 
+            align-items: center; 
+            box-shadow: 0 20px 60px -10px rgba(0, 0, 0, 0.6); 
+        }
+
+        /* אנימציות */
         .dropdown-content { display: none; }
-        .dropdown-content.active { display: block; animation: slideIn 0.3s ease; }
-        .chart-center { position: absolute; top: 52%; left: 50%; transform: translate(-50%, -50%); text-align: center; pointer-events: none; }
-        @keyframes slideIn { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
-        .btn-update { transition: all 0.2s ease; }
-        .btn-update:active { transform: scale(0.95); }
+        .dropdown-content.active { display: block; animation: slideDown 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
+        @keyframes slideDown { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
+
+        /* מיקום אחוזים במרכז הגרף */
+        .chart-center { 
+            position: absolute; 
+            top: 50%; 
+            left: 50%; 
+            transform: translate(-50%, -50%); 
+            text-align: center; 
+            pointer-events: none; 
+            width: 100%;
+        }
+
+        /* --- תיקון האשף (Wizard) --- */
+        #wizard-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.6);
+            backdrop-filter: blur(8px);
+            z-index: 9999; /* שכבה הכי עליונה */
+            display: none; /* מוסתר כברירת מחדל */
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        #wizard-overlay.flex {
+            display: flex;
+            opacity: 1;
+        }
+
+        .wizard-card {
+            background: white;
+            width: 90%;
+            max-width: 480px;
+            padding: 40px;
+            border-radius: 30px;
+            text-align: center;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+            transform: scale(0.95);
+            transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
         
-        /* עיצוב המודאל (האשף החכם) */
-        #wizard-modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.85); z-index: 50; backdrop-filter: blur(8px); align-items: center; justify-content: center; }
-        #wizard-modal.flex { display: flex; animation: fadeIn 0.5s ease; }
-        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
-        .wizard-card { background: white; border-radius: 40px; padding: 3rem; max-width: 500px; width: 90%; text-align: center; position: relative; overflow: hidden; }
-        .shine-btn { background: linear-gradient(45deg, #4f46e5, #818cf8); color: white; transition: 0.3s; box-shadow: 0 10px 20px rgba(79, 70, 229, 0.3); }
-        .shine-btn:hover { transform: translateY(-2px); box-shadow: 0 15px 30px rgba(79, 70, 229, 0.5); }
+        #wizard-overlay.flex .wizard-card {
+            transform: scale(1);
+        }
+
+        /* כפתור זוהר לאשף */
+        .btn-magic {
+            background: linear-gradient(135deg, #6366f1 0%, #a855f7 100%);
+            color: white;
+            transition: all 0.3s ease;
+            box-shadow: 0 10px 20px rgba(99, 102, 241, 0.3);
+        }
+        .btn-magic:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 15px 30px rgba(99, 102, 241, 0.4);
+        }
     </style>
 </head>
-<body class="p-4 md:p-8">
+<body class="p-4 md:p-8 min-h-screen">
 
-    <div id="wizard-modal">
-        <div class="wizard-card">
+    <div id="wizard-overlay">
+        <div class="wizard-card relative overflow-hidden">
             <div class="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500"></div>
-            <h1 class="text-4xl font-black text-slate-800 mb-2">ברוכים הבאים! 💍</h1>
-            <p class="text-gray-500 mb-8 text-lg">בואו נבנה את תקציב החלומות שלכם בשניות.<br>כמה תרצו להשקיע בחתונה?</p>
             
-            <div class="relative mb-8">
-                <span class="absolute top-1/2 right-4 transform -translate-y-1/2 text-2xl text-gray-400">₪</span>
-                <input id="wizard-budget" type="number" class="w-full text-center text-4xl font-black border-b-2 border-indigo-100 py-4 outline-none focus:border-indigo-500 transition text-slate-700" placeholder="150,000">
+            <div class="mb-6">
+                <span class="text-4xl">💍</span>
+            </div>
+            
+            <h2 class="text-3xl font-black text-slate-800 mb-2">ברוכים הבאים!</h2>
+            <p class="text-slate-500 mb-8 text-lg leading-relaxed">
+                בואו נבנה לכם תקציב חתונה מנצח בשניות.<br>
+                רק תגידו לנו: <strong>מה התקציב הכולל?</strong>
+            </p>
+
+            <div class="relative max-w-[280px] mx-auto mb-8">
+                <span class="absolute top-1/2 right-4 -translate-y-1/2 text-gray-400 text-xl font-bold">₪</span>
+                <input id="wizard-input" type="number" 
+                       class="w-full text-center text-4xl font-black text-slate-800 border-b-2 border-slate-200 py-3 outline-none focus:border-indigo-500 transition placeholder:text-slate-200" 
+                       placeholder="150,000">
             </div>
 
-            <button onclick="runSmartWizard()" class="shine-btn w-full py-4 rounded-2xl text-xl font-bold">✨ צור לי תוכנית אוטומטית</button>
-            <button onclick="closeWizard()" class="mt-4 text-gray-400 text-sm font-bold hover:text-gray-600">אני רוצה להגדיר לבד (דלג)</button>
+            <button onclick="runWizard()" class="btn-magic w-full py-4 rounded-2xl text-lg font-bold mb-4">
+                ✨ צור לי תוכנית אוטומטית
+            </button>
+            
+            <button onclick="closeWizard()" class="text-sm text-slate-400 font-bold hover:text-slate-600 transition">
+                לא תודה, אגדיר ידנית
+            </button>
         </div>
     </div>
 
-    <div class="max-w-6xl mx-auto blur-sm transition duration-700" id="main-app">
+    <div id="main-app" class="max-w-6xl mx-auto transition-all duration-500">
         
-        <div class="glass-card mb-8 p-8 flex flex-row-reverse justify-between items-center shadow-lg">
-            <div class="text-right">
-                <h2 class="text-2xl font-black text-slate-800">מתקרבים לרגע המרגש...</h2>
-                <div class="flex gap-2 mt-2 justify-end">
-                    <input id="date-in" type="datetime-local" class="text-xs border rounded-lg px-2 py-1 outline-none bg-white/50">
-                    <button onclick="saveWeddingDate()" class="text-[10px] bg-indigo-600 text-white px-3 py-1 rounded-lg hover:bg-indigo-700 transition shadow-md">שמור תאריך 📅</button>
+        <div class="glass-card mb-8 p-6 md:p-8 flex flex-col md:flex-row-reverse justify-between items-center gap-6 shadow-xl relative overflow-hidden">
+            <div class="text-center md:text-right z-10">
+                <h2 class="text-2xl font-black text-slate-800">הספירה לאחור...</h2>
+                <div class="flex items-center gap-2 mt-2 justify-center md:justify-end">
+                    <input id="date-in" type="datetime-local" class="text-xs border border-indigo-100 rounded-lg px-3 py-1.5 outline-none bg-white/80">
+                    <button onclick="saveWeddingDate()" class="text-[10px] bg-slate-800 text-white px-3 py-1.5 rounded-lg font-bold hover:bg-slate-700 transition">שמור 💾</button>
                 </div>
             </div>
-            <div id="countdown" class="flex flex-row-reverse gap-6 text-indigo-600 font-black text-4xl">
-                <div class="text-center"><span id="days">00</span><p class="text-[10px] text-gray-400 font-bold tracking-wide">ימים</p></div>
-                <div class="text-center"><span id="hours">00</span><p class="text-[10px] text-gray-400 font-bold tracking-wide">שעות</p></div>
-                <div class="text-center"><span id="minutes">00</span><p class="text-[10px] text-gray-400 font-bold tracking-wide">דקות</p></div>
-                <div class="text-center text-indigo-400 opacity-70"><span id="seconds">00</span><p class="text-[10px] text-gray-400 font-bold tracking-wide">שניות</p></div>
+            
+            <div id="countdown" class="flex flex-row-reverse gap-4 md:gap-8 text-indigo-600">
+                <div class="text-center"><span id="days" class="text-4xl md:text-5xl font-black block leading-none">00</span><span class="text-[10px] uppercase font-bold tracking-widest text-slate-400">ימים</span></div>
+                <div class="text-center"><span id="hours" class="text-4xl md:text-5xl font-black block leading-none">00</span><span class="text-[10px] uppercase font-bold tracking-widest text-slate-400">שעות</span></div>
+                <div class="text-center"><span id="minutes" class="text-4xl md:text-5xl font-black block leading-none">00</span><span class="text-[10px] uppercase font-bold tracking-widest text-slate-400">דקות</span></div>
+                <div class="text-center opacity-60"><span id="seconds" class="text-4xl md:text-5xl font-black block leading-none">00</span><span class="text-[10px] uppercase font-bold tracking-widest text-slate-400">שניות</span></div>
             </div>
         </div>
 
-        <div class="grid grid-cols-1 lg:grid-cols-12 gap-10">
-            <div id="cat-list" class="lg:col-span-7 space-y-4">
-                <div class="flex justify-between items-end mb-6 px-2">
-                    <h1 class="text-4xl font-black text-slate-800 italic uppercase tracking-tighter">התקציב <span class="text-indigo-600">שלנו.</span></h1>
-                    <button onclick="document.getElementById('wizard-modal').classList.add('flex')" class="text-indigo-500 text-sm font-bold hover:underline">🔄 הפעל אשף מחדש</button>
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
+            
+            <div id="cat-list" class="lg:col-span-7 space-y-5">
+                <div class="flex justify-between items-end px-2 mb-4">
+                    <h1 class="text-4xl font-black text-slate-800 italic uppercase tracking-tight">התקציב <span class="text-indigo-600">שלנו.</span></h1>
+                    <button onclick="showWizard()" class="text-xs font-bold text-indigo-500 bg-indigo-50 px-3 py-1 rounded-full hover:bg-indigo-100 transition">🔄 אשף אוטומטי</button>
                 </div>
-            </div>
+                </div>
 
             <div class="lg:col-span-5">
-                <div class="dark-stats p-10 sticky top-10 min-h-[620px]">
-                    <div class="w-full text-center mb-6">
-                        <p class="text-indigo-400 text-xs font-bold uppercase tracking-widest text-center">יתרה לשימוש חופשי</p>
-                        <h3 id="rem-budget" class="text-5xl font-black text-white mt-2 drop-shadow-lg text-center">₪0</h3>
+                <div class="dark-stats p-8 sticky top-8">
+                    <div class="w-full text-center mb-8">
+                        <p class="text-indigo-300 text-[10px] font-bold uppercase tracking-[0.2em] mb-2">יתרה לשימוש חופשי</p>
+                        <h3 id="rem-budget" class="text-5xl md:text-6xl font-black text-white tracking-tight">₪0</h3>
                     </div>
                     
-                    <div class="relative w-full aspect-square max-w-[280px] mb-8 group cursor-pointer" onclick="triggerConfetti()">
+                    <div class="relative w-64 h-64 mx-auto mb-8 cursor-pointer group" onclick="triggerConfetti()">
                         <canvas id="mainChart"></canvas>
-                        <div class="chart-center">
-                            <p id="pct-val" class="text-5xl font-black text-white leading-none group-hover:scale-110 transition duration-300">0%</p>
-                            <p class="text-indigo-400 text-[10px] font-black uppercase mt-2 tracking-widest">התוכנית מוכנה</p>
+                        <div class="chart-center z-10">
+                            <p id="pct-val" class="text-5xl font-black text-white leading-none group-hover:scale-110 transition-transform duration-300">0%</p>
+                            <p class="text-gray-400 text-[10px] font-bold uppercase mt-2 tracking-widest">התוכנית מוכנה</p>
                         </div>
                     </div>
 
                     <div class="w-full space-y-4">
-                        <div class="bg-white/5 border border-white/10 p-5 rounded-3xl backdrop-blur-sm">
-                            <p class="text-gray-400 text-[10px] uppercase font-bold mb-1 text-right italic">יעד תקציבי כולל</p>
-                            <div class="flex gap-2">
+                        <div class="bg-white/5 border border-white/10 p-5 rounded-2xl backdrop-blur-sm">
+                            <p class="text-gray-400 text-[10px] uppercase font-bold mb-1 text-right">יעד תקציבי כולל</p>
+                            <div class="flex gap-3">
                                 <input id="total-target" type="number" class="bg-transparent text-2xl font-black w-full outline-none text-white text-right font-mono" placeholder="0">
-                                <button onclick="updateBudgetTotal()" class="bg-emerald-500 px-4 py-1 rounded-xl text-xs font-bold shadow-lg btn-update hover:bg-emerald-400">עדכן ✅</button>
+                                <button onclick="updateBudgetTotal()" class="bg-emerald-500 hover:bg-emerald-400 text-white px-4 rounded-xl text-sm font-bold shadow-lg transition">עדכן</button>
                             </div>
                         </div>
+                        
                         <div class="grid grid-cols-2 gap-4">
-                            <div class="bg-white/5 p-4 rounded-2xl text-center border border-white/5"><p class="text-gray-400 text-[10px] uppercase mb-1">השקעה לאורח</p><p id="guest-cost" class="text-xl font-bold italic text-white">₪0</p></div>
-                            <div class="bg-white/5 p-4 rounded-2xl text-center border border-white/5"><p class="text-gray-400 text-[10px] uppercase mb-1">קהל מוזמנים</p><input id="guest-count" type="number" onchange="updateUI()" class="bg-transparent text-xl font-bold text-indigo-400 w-full text-center outline-none" value="400"></div>
+                            <div class="bg-white/5 p-4 rounded-2xl text-center border border-white/5">
+                                <p class="text-gray-400 text-[10px] uppercase mb-1">השקעה לאורח</p>
+                                <p id="guest-cost" class="text-xl font-bold text-white">₪0</p>
+                            </div>
+                            <div class="bg-white/5 p-4 rounded-2xl text-center border border-white/5">
+                                <p class="text-gray-400 text-[10px] uppercase mb-1">כמות מוזמנים</p>
+                                <input id="guest-count" type="number" onchange="updateUI()" class="bg-transparent text-xl font-bold text-indigo-300 w-full text-center outline-none" value="400">
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -106,11 +207,11 @@
     </div>
 
     <script>
-        const API = "https://weddingplannerapp-i54n.onrender.com"; // וודא שזה ה-URL שלך
+        const API = "https://weddingplannerapp-i54n.onrender.com"; // ה-API שלך
         let myChart;
         let localData = { spent: 0, total: 0 };
         
-        // הגדרת הקטגוריות והאחוזים האוטומטיים (Smart Logic)
+        // הגדרת המבנה והאחוזים לאשף החכם
         const cats = [
             { name: 'המקום והאווירה', icon: '🏛️', items: [
                 {name: 'אולם אירועים', pct: 0.40}, 
@@ -119,7 +220,7 @@
                 {name: 'בר בסיסי', pct: 0.0}
             ]},
             { name: 'קולינריה', icon: '🍽️', items: [
-                {name: 'קייטרינג', pct: 0.0}, // לרוב כלול באולם
+                {name: 'קייטרינג', pct: 0.0}, 
                 {name: 'בר אלכוהול משודרג', pct: 0.03}, 
                 {name: 'עמדת מתוקים', pct: 0.01}, 
                 {name: 'טעימות', pct: 0.0}
@@ -143,92 +244,84 @@
             ]}
         ];
 
-        // --- Wizard Logic ---
-        function checkFirstTime() {
-            // אם התקציב הוא 0 או לא קיים, נציג את האשף
-            if (!localData.total || localData.total === 0) {
-                document.getElementById('wizard-modal').classList.add('flex');
-                document.getElementById('main-app').classList.add('blur-sm');
-            } else {
-                document.getElementById('main-app').classList.remove('blur-sm');
-            }
+        // --- לוגיקת האשף (Wizard) ---
+        function showWizard() {
+            document.getElementById('wizard-overlay').classList.add('flex');
+            // מחיקת הטשטוש כדי למנוע כפילות, הרקע הכהה של האשף יעשה את העבודה
         }
 
         function closeWizard() {
-            document.getElementById('wizard-modal').classList.remove('flex');
-            document.getElementById('main-app').classList.remove('blur-sm');
+            document.getElementById('wizard-overlay').classList.remove('flex');
         }
 
-        async function runSmartWizard() {
-            const budget = parseFloat(document.getElementById('wizard-budget').value);
+        function checkFirstTime() {
+            // אם התקציב הוא 0, נציג את האשף אוטומטית
+            if (!localData.total || localData.total === 0) {
+                showWizard();
+            }
+        }
+
+        async function runWizard() {
+            const budget = parseFloat(document.getElementById('wizard-input').value);
             if (!budget || budget < 1000) {
-                alert("אנא הזן תקציב הגיוני כדי שנוכל לעזור לך :)");
+                alert("בבקשה להזין תקציב הגיוני 😊");
                 return;
             }
 
-            // 1. עדכון תקציב כולל
+            // עדכון תקציב
             document.getElementById('total-target').value = budget;
-            await updateBudgetTotal(true); // true = אל תרענן עד שנסיים הכל
+            await updateBudgetTotal(true); 
 
-            // 2. לולאה חכמה למילוי הסעיפים לפי האחוזים
+            // עדכון אוטומטי של הסעיפים
             const promises = [];
             cats.forEach(cat => {
                 cat.items.forEach(item => {
                     if (item.pct > 0) {
-                        const estimatedAmount = Math.floor(budget * item.pct);
-                        // עדכון ב-UI
-                        const inputId = `in-${item.name}`;
-                        const el = document.getElementById(inputId);
-                        if(el) el.value = estimatedAmount;
-                        
-                        // שליחה לשרת (שמירה אוטומטית)
-                        promises.push(saveExp(item.name, inputId, `note-${item.name}`, true));
+                        const val = Math.floor(budget * item.pct);
+                        // עדכון UI מקומי
+                        const el = document.getElementById(`in-${item.name}`);
+                        if(el) el.value = val;
+                        // שמירה לשרת
+                        promises.push(saveExp(item.name, `in-${item.name}`, `note-${item.name}`, true));
                     }
                 });
             });
 
             await Promise.all(promises);
-            
-            // 3. סיום חגיגי
             closeWizard();
-            triggerConfetti();
             refreshFromServer();
-            alert("התוכנית נוצרה בהצלחה! 🥂");
+            setTimeout(triggerConfetti, 500); // חגיגה קטנה
         }
 
-        function triggerConfetti() {
-            confetti({
-                particleCount: 150,
-                spread: 70,
-                origin: { y: 0.6 },
-                colors: ['#4f46e5', '#ec4899', '#10b981', '#fbbf24']
-            });
-        }
-        // --------------------
-
+        // --- פונקציות ליבה ---
+        
         function render() {
             const container = document.getElementById('cat-list');
-            container.innerHTML = '<div class="flex justify-between items-end mb-6 px-2"><h1 class="text-4xl font-black text-slate-800 italic uppercase tracking-tighter">התקציב <span class="text-indigo-600">שלנו.</span></h1><button onclick="document.getElementById(\'wizard-modal\').classList.add(\'flex\')" class="text-indigo-500 text-sm font-bold hover:underline">🔄 הפעל אשף מחדש</button></div>';
+            // ניקוי והוספת כותרת
+            container.innerHTML = '<div class="flex justify-between items-end px-2 mb-4"><h1 class="text-4xl font-black text-slate-800 italic uppercase tracking-tight">התקציב <span class="text-indigo-600">שלנו.</span></h1><button onclick="showWizard()" class="text-xs font-bold text-indigo-500 bg-indigo-50 px-3 py-1 rounded-full hover:bg-indigo-100 transition">🔄 אשף אוטומטי</button></div>';
             
             cats.forEach((c, i) => {
                 const id = `list-${i}`;
                 container.innerHTML += `
-                    <div class="glass-card p-6 shadow-sm mb-4 border-r-4 border-indigo-400 transition hover:shadow-lg">
+                    <div class="glass-card p-6 shadow-sm border-r-4 border-indigo-500 hover:shadow-md transition duration-300">
                         <div class="flex justify-between items-center cursor-pointer" onclick="toggleDropdown('${id}')">
-                            <div class="flex items-center gap-4"><span class="text-2xl">${c.icon}</span><span class="text-xl font-bold text-slate-700">${c.name}</span></div>
-                            <span class="text-indigo-400 text-xs font-bold bg-indigo-50 px-2 py-1 rounded-full">לחץ לפירוט ▼</span>
+                            <div class="flex items-center gap-4">
+                                <span class="text-2xl">${c.icon}</span>
+                                <span class="text-xl font-bold text-slate-700">${c.name}</span>
+                            </div>
+                            <span class="text-xs font-bold text-indigo-400 bg-indigo-50 px-2 py-1 rounded-lg">הצג פירוט ▼</span>
                         </div>
-                        <div id="${id}" class="dropdown-content mt-4 space-y-4 pt-4 border-t border-gray-100">
+                        <div id="${id}" class="dropdown-content mt-4 pt-4 border-t border-slate-100 space-y-3">
                             ${c.items.map(item => `
-                                <div class="bg-white/60 p-4 rounded-2xl flex flex-col gap-2 border border-gray-100 hover:border-indigo-200 transition">
+                                <div class="bg-white/50 p-3 rounded-xl flex flex-col gap-2 border border-slate-100 hover:border-indigo-200 transition">
                                     <div class="flex justify-between items-center">
                                         <span class="font-bold text-slate-700 text-sm">${item.name}</span>
                                         <div class="flex gap-2 items-center">
-                                            <input id="in-${item.name}" type="number" class="w-28 bg-white text-center rounded-lg py-1 shadow-inner outline-none font-black text-indigo-600 border border-gray-200 focus:border-indigo-500" placeholder="₪0">
-                                            <button onclick="saveExp('${item.name}', 'in-${item.name}', 'note-${item.name}')" class="bg-emerald-500 text-white px-3 py-1 rounded-lg text-xs font-bold shadow-md btn-update hover:bg-emerald-600">שמור 💾</button>
+                                            <input id="in-${item.name}" type="number" class="w-24 bg-white text-center rounded-lg py-1 text-sm font-black text-indigo-600 border border-slate-200 focus:border-indigo-500 outline-none" placeholder="0">
+                                            <button onclick="saveExp('${item.name}', 'in-${item.name}', 'note-${item.name}')" class="bg-emerald-500 text-white w-8 h-8 rounded-lg flex items-center justify-center shadow-sm hover:bg-emerald-600 transition">💾</button>
                                         </div>
                                     </div>
-                                    <input id="note-${item.name}" type="text" placeholder="הערה (למשל: מקדמה שולמה)" class="text-[11px] bg-transparent border-b border-gray-200 outline-none w-full text-slate-500 italic focus:border-indigo-300">
+                                    <input id="note-${item.name}" type="text" placeholder="הערה..." class="text-xs bg-transparent border-b border-transparent focus:border-indigo-200 outline-none w-full text-slate-400">
                                 </div>`).join('')}
                         </div>
                     </div>`;
@@ -237,20 +330,21 @@
 
         async function saveExp(cat, inputId, noteId, skipRefresh = false) {
             const amount = parseFloat(document.getElementById(inputId).value) || 0;
-            const note = document.getElementById(noteId).value;
+            const note = document.getElementById(noteId) ? document.getElementById(noteId).value : "";
             
             await fetch(`${API}/budget/add`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ category: cat, amount: amount, notes: note })
             });
-            if(!skipRefresh) refreshFromServer();
+            
+            if (!skipRefresh) refreshFromServer();
         }
 
         async function updateBudgetTotal(skipRefresh = false) {
             const amount = parseFloat(document.getElementById('total-target').value) || 0;
             await fetch(`${API}/budget/update_total?amount=${amount}`, { method: 'POST' });
-            if(!skipRefresh) refreshFromServer();
+            if (!skipRefresh) refreshFromServer();
         }
 
         async function refreshFromServer() {
@@ -259,25 +353,23 @@
                 const data = await res.json();
                 localData = data;
                 updateUI();
-                // בדיקה אם להציג אשף
                 checkFirstTime(); 
-            } catch (e) { console.error("Sync Error"); }
+            } catch (e) { console.error("Sync Error", e); }
         }
 
         function updateUI() {
             const total = localData.total || 0;
             const spent = localData.spent || 0;
             const rem = total - spent;
-            const guests = parseInt(document.getElementById('guest-count').value) || 1;
+            const guests = parseInt(document.getElementById('guest-count').value) || 400;
 
             document.getElementById('rem-budget').innerText = `₪${rem.toLocaleString()}`;
-            document.getElementById('total-target').value = total;
+            document.getElementById('total-target').value = total > 0 ? total : "";
             
-            // חישוב אחוזים הפוך (כמה מהתקציב *הוקצה* בפועל) - כאן זה מעט שונה, אנו מציגים כמה מהתקציב נוצל/שורין
             const pct = total > 0 ? Math.round((spent/total)*100) : 0;
-            
             document.getElementById('pct-val').innerText = `${pct}%`;
             document.getElementById('guest-cost').innerText = `₪${Math.round(spent/guests)}`;
+            
             draw(spent, total);
         }
 
@@ -285,20 +377,38 @@
             const ctx = document.getElementById('mainChart').getContext('2d');
             if (myChart) myChart.destroy();
             const rem = t - s > 0 ? t - s : 0;
+            
+            // צבעים מותאמים אישית
             myChart = new Chart(ctx, {
                 type: 'doughnut',
-                data: { datasets: [{ data: [s, rem], backgroundColor: ['#4f46e5', 'rgba(255,255,255,0.05)'], borderWidth: 0 }] },
+                data: { 
+                    datasets: [{ 
+                        data: [s, rem], 
+                        backgroundColor: ['#6366f1', 'rgba(255,255,255,0.05)'], 
+                        borderWidth: 0,
+                        borderRadius: 20 
+                    }] 
+                },
                 options: { 
-                    cutout: '82%', 
-                    plugins: { legend: { display: false } }, 
+                    cutout: '85%', 
+                    plugins: { legend: { display: false }, tooltip: { enabled: false } }, 
                     animation: { duration: 1500, easing: 'easeOutQuart' } 
                 }
             });
         }
 
+        function triggerConfetti() {
+            confetti({
+                particleCount: 150,
+                spread: 100,
+                origin: { y: 0.6 },
+                colors: ['#6366f1', '#a855f7', '#ec4899']
+            });
+        }
+
         function saveWeddingDate() {
             const val = document.getElementById('date-in').value;
-            if (val) { localStorage.setItem('wedding_date', val); updateCountdown(); alert("התאריך נשמר בהצלחה! ❤️"); }
+            if (val) { localStorage.setItem('wedding_date', val); updateCountdown(); }
         }
 
         function updateCountdown() {
@@ -313,12 +423,16 @@
             }
         }
 
-        function toggleDropdown(id) { document.getElementById(id).classList.toggle('active'); }
-        
-        // אתחול
+        function toggleDropdown(id) { 
+            const el = document.getElementById(id);
+            el.classList.toggle('active');
+        }
+
+        // הפעלה ראשונית
         render();
         refreshFromServer();
         setInterval(updateCountdown, 1000);
+        updateCountdown();
     </script>
 </body>
 </html>
