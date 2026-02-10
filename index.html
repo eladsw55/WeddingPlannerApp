@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Wedding Elite Pro | Production Ready</title>
+    <title>Wedding Elite Pro | Pure UI</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Assistant:wght@300;400;700&display=swap" rel="stylesheet">
@@ -23,7 +23,10 @@
         <div class="glass-card mb-8 p-8 flex flex-row-reverse justify-between items-center shadow-2xl">
             <div class="text-right">
                 <h2 class="text-2xl font-black text-slate-800">הספירה לאחור...</h2>
-                <button onclick="toggleDropdown('settings')" class="text-xs text-indigo-500 underline">הגדרות אירוע ⚙️</button>
+                <div class="flex gap-2 mt-2">
+                    <input id="date-in" type="datetime-local" class="text-xs border rounded-lg px-2 py-1 outline-none">
+                    <button onclick="saveWeddingDate()" class="text-[10px] bg-indigo-600 text-white px-2 py-1 rounded-lg">עדכן תאריך ⚙️</button>
+                </div>
             </div>
             <div id="countdown" class="flex flex-row-reverse gap-6 text-indigo-600 font-black text-4xl">
                 <div class="text-center"><span id="days">00</span><p class="text-[10px] text-gray-400">ימים</p></div>
@@ -33,24 +36,9 @@
             </div>
         </div>
 
-        <div id="settings" class="dropdown-content glass-card p-6 mb-8 text-center border-2 border-indigo-100">
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div>
-                    <label class="block mb-2 text-sm font-bold">תאריך החתונה:</label>
-                    <input id="date-in" type="datetime-local" class="border rounded-full px-6 py-2 outline-none w-full">
-                    <button onclick="saveWeddingDate()" class="mt-3 bg-indigo-600 text-white px-8 py-2 rounded-full font-bold w-full shadow-lg">עדכן תאריך ושעון</button>
-                </div>
-                <div class="border-r pr-6">
-                    <label class="block mb-2 text-sm font-bold">ניהול קטגוריות:</label>
-                    <input id="new-cat-name" type="text" placeholder="שם קטגוריה חדשה" class="border rounded-full px-4 py-2 outline-none w-full mb-2">
-                    <button onclick="addNewCategory()" class="bg-emerald-600 text-white px-8 py-2 rounded-full font-bold w-full">+ הוסף קטגוריה</button>
-                </div>
-            </div>
-        </div>
-
         <div class="grid grid-cols-1 lg:grid-cols-12 gap-10">
             <div id="cat-list" class="lg:col-span-7 space-y-4">
-                <h1 class="text-4xl font-black text-slate-800 mb-8 px-2 uppercase italic tracking-tighter">ניהול <span class="text-indigo-600">החגיגה.</span></h1>
+                <h1 class="text-4xl font-black text-slate-800 mb-8 px-2 italic">ניהול <span class="text-indigo-600">החגיגה.</span></h1>
             </div>
 
             <div class="lg:col-span-5">
@@ -72,8 +60,8 @@
                         <div class="bg-white/5 border border-white/10 p-5 rounded-3xl">
                             <p class="text-gray-400 text-[10px] uppercase font-bold mb-1">תקציב יעד כולל</p>
                             <div class="flex gap-2">
-                                <input id="total-target" type="number" class="bg-transparent text-2xl font-black w-full outline-none text-white" value="0">
-                                <button onclick="updateBudgetTotal()" class="bg-indigo-600 px-4 py-1 rounded-xl text-xs font-bold shadow-md">עדכן ✅</button>
+                                <input id="total-target" type="number" class="bg-transparent text-2xl font-black w-full outline-none text-white" placeholder="הזן תקציב">
+                                <button onclick="updateBudgetTotal()" class="bg-emerald-500 px-4 py-1 rounded-xl text-xs font-bold shadow-md">עדכן ✅</button>
                             </div>
                         </div>
                         <div class="grid grid-cols-2 gap-4">
@@ -90,36 +78,33 @@
         const API = "https://weddingplannerapp-i54n.onrender.com";
         let myChart;
         let localData = { spent: 0, total: 0 };
-        let categories = JSON.parse(localStorage.getItem('wedding_structure')) || [
+        const cats = [
             { name: 'המקום והאווירה', icon: '🏛️', items: ['אולם', 'עיצוב', 'בר'] },
             { name: 'מדיה ובידור', icon: '📷', items: ['DJ', 'צלם', 'מגנטים'] }
         ];
 
         function render() {
             const container = document.getElementById('cat-list');
-            container.innerHTML = '<h1 class="text-4xl font-black text-slate-800 mb-8 px-2 uppercase italic tracking-tighter">ניהול <span class="text-indigo-600">החגיגה.</span></h1>';
-            categories.forEach((c, i) => {
+            container.innerHTML = '<h1 class="text-4xl font-black text-slate-800 mb-8 px-2 italic">ניהול <span class="text-indigo-600">החגיגה.</span></h1>';
+            cats.forEach((c, i) => {
                 const id = `list-${i}`;
                 container.innerHTML += `
-                    <div class="glass-card p-6 shadow-sm mb-4 transition hover:shadow-md">
+                    <div class="glass-card p-6 shadow-sm mb-4">
                         <div class="flex justify-between items-center cursor-pointer" onclick="toggleDropdown('${id}')">
                             <div class="flex items-center gap-4"><span class="text-2xl">${c.icon}</span><span class="text-xl font-bold text-slate-700">${c.name}</span></div>
-                            <div class="flex gap-4 items-center">
-                                <button onclick="addSubItem(${i})" class="text-[10px] bg-indigo-50 text-indigo-600 px-2 py-1 rounded-full font-bold">+ תת סעיף</button>
-                                <span class="text-gray-300">▼</span>
-                            </div>
+                            <span class="text-gray-300">▼</span>
                         </div>
                         <div id="${id}" class="dropdown-content mt-4 space-y-4 pt-4 border-t">
                             ${c.items.map(item => `
-                                <div class="bg-white/40 p-4 rounded-2xl flex flex-col gap-2 border border-white/20">
+                                <div class="bg-white/40 p-4 rounded-2xl flex flex-col gap-2">
                                     <div class="flex justify-between items-center">
                                         <span class="font-bold text-slate-600">${item}</span>
                                         <div class="flex gap-2 items-center">
-                                            <input id="in-${item}" type="number" class="w-24 bg-white text-center rounded-lg py-1 shadow-inner outline-none font-black text-indigo-600" placeholder="₪0">
-                                            <button onclick="saveExp('${item}', 'in-${item}', 'note-${item}')" class="bg-emerald-500 text-white px-3 py-1 rounded-lg text-xs font-bold shadow-md hover:bg-emerald-600 transition">עדכן 💾</button>
+                                            <input id="in-${item}" type="number" class="w-24 bg-white text-center rounded-lg py-1 outline-none font-bold" placeholder="₪0">
+                                            <button onclick="saveExp('${item}', 'in-${item}', 'note-${item}')" class="bg-emerald-500 text-white px-3 py-1 rounded-lg text-xs font-bold shadow-md">עדכן 💾</button>
                                         </div>
                                     </div>
-                                    <input id="note-${item}" type="text" placeholder="הערה לסעיף זה..." class="text-xs bg-transparent border-b border-gray-200 outline-none w-full py-1 text-slate-500 italic">
+                                    <input id="note-${item}" type="text" placeholder="הערה לסעיף..." class="text-xs bg-transparent border-b border-gray-200 outline-none w-full text-slate-500 italic">
                                 </div>`).join('')}
                         </div>
                     </div>`;
@@ -129,10 +114,6 @@
         async function saveExp(cat, inputId, noteId) {
             const amount = parseFloat(document.getElementById(inputId).value) || 0;
             const note = document.getElementById(noteId).value;
-            // Optimistic update for UI speed
-            localData.spent += amount;
-            updateUI();
-            
             await fetch(`${API}/budget/add`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -143,9 +124,12 @@
 
         async function updateBudgetTotal() {
             const amount = parseFloat(document.getElementById('total-target').value);
+            // Optimistic update
+            localData.total = amount;
+            updateUI();
+            
             await fetch(`${API}/budget/update_total?amount=${amount}`, { method: 'POST' });
             refreshFromServer();
-            alert("התקציב עודכן!");
         }
 
         async function refreshFromServer() {
@@ -175,28 +159,8 @@
             myChart = new Chart(ctx, {
                 type: 'doughnut',
                 data: { datasets: [{ data: [s, r > 0 ? r : 0], backgroundColor: ['#4f46e5', '#334155'], borderWidth: 0 }] },
-                options: { cutout: '85%', plugins: { legend: { display: false } }, animation: { duration: 500 } }
+                options: { cutout: '85%', plugins: { legend: { display: false } } }
             });
-        }
-
-        function addNewCategory() {
-            const name = document.getElementById('new-cat-name').value;
-            if (name) {
-                categories.push({ name: name, icon: '✨', items: [name] });
-                localStorage.setItem('wedding_structure', JSON.stringify(categories));
-                document.getElementById('new-cat-name').value = '';
-                render();
-            }
-        }
-
-        function addSubItem(index) {
-            event.stopPropagation();
-            const subName = prompt("שם התת-סעיף:");
-            if (subName) {
-                categories[index].items.push(subName);
-                localStorage.setItem('wedding_structure', JSON.stringify(categories));
-                render();
-            }
         }
 
         function saveWeddingDate() {
@@ -204,7 +168,6 @@
             if (val) {
                 localStorage.setItem('wedding_date', val);
                 updateCountdown();
-                toggleDropdown('settings');
             }
         }
 
@@ -225,7 +188,6 @@
         render();
         refreshFromServer();
         setInterval(updateCountdown, 1000);
-        updateCountdown();
     </script>
 </body>
 </html>
