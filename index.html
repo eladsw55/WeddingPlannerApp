@@ -3,436 +3,196 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Wedding Elite | AI Planner</title>
-    
+    <title>Wedding Elite | AI Wedding Manager</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Assistant:wght@300;400;600;700;800&display=swap" rel="stylesheet">
-    
     <style>
-        /* הגדרות בסיס */
-        body { 
-            font-family: 'Assistant', sans-serif; 
-            background: linear-gradient(rgba(255,255,255,0.4), rgba(255,255,255,0.4)), url('https://images.unsplash.com/photo-1519741497674-611481863552?ixlib=rb-4.0.3&auto=format&fit=crop&w=1920&q=80'); 
-            background-size: cover; 
-            background-attachment: fixed;
-            overflow-x: hidden;
-        }
-
-        /* עיצוב הזכוכית (Glassmorphism) */
-        .glass-card { 
-            background: rgba(255, 255, 255, 0.95); 
-            backdrop-filter: blur(20px); 
-            border-radius: 24px; 
-            border: 1px solid rgba(255,255,255,0.5); 
-            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1); 
-        }
-
-        /* הלוח הכהה */
-        .dark-stats { 
-            background: #0f172a; 
-            color: white; 
-            border-radius: 32px; 
-            position: relative; 
-            display: flex; 
-            flex-direction: column; 
-            align-items: center; 
-            box-shadow: 0 20px 60px -10px rgba(0, 0, 0, 0.6); 
-        }
-
-        /* אנימציות */
-        .dropdown-content { display: none; }
-        .dropdown-content.active { display: block; animation: slideDown 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
-        @keyframes slideDown { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
-
-        /* מיקום אחוזים במרכז הגרף */
-        .chart-center { 
-            position: absolute; 
-            top: 50%; 
-            left: 50%; 
-            transform: translate(-50%, -50%); 
-            text-align: center; 
-            pointer-events: none; 
-            width: 100%;
-        }
-
-        /* --- תיקון האשף (Wizard) --- */
-        #wizard-overlay {
-            position: fixed;
-            inset: 0;
-            background: rgba(0, 0, 0, 0.6);
-            backdrop-filter: blur(8px);
-            z-index: 9999; /* שכבה הכי עליונה */
-            display: none; /* מוסתר כברירת מחדל */
-            align-items: center;
-            justify-content: center;
-            opacity: 0;
-            transition: opacity 0.3s ease;
-        }
-
-        #wizard-overlay.flex {
-            display: flex;
-            opacity: 1;
-        }
-
-        .wizard-card {
-            background: white;
-            width: 90%;
-            max-width: 480px;
-            padding: 40px;
-            border-radius: 30px;
-            text-align: center;
-            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
-            transform: scale(0.95);
-            transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
-        }
-        
-        #wizard-overlay.flex .wizard-card {
-            transform: scale(1);
-        }
-
-        /* כפתור זוהר לאשף */
-        .btn-magic {
-            background: linear-gradient(135deg, #6366f1 0%, #a855f7 100%);
-            color: white;
-            transition: all 0.3s ease;
-            box-shadow: 0 10px 20px rgba(99, 102, 241, 0.3);
-        }
-        .btn-magic:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 15px 30px rgba(99, 102, 241, 0.4);
-        }
+        body { font-family: 'Assistant', sans-serif; background: #f8fafc; color: #1e293b; }
+        .glass-card { background: rgba(255, 255, 255, 0.9); backdrop-filter: blur(10px); border-radius: 24px; border: 1px solid rgba(255,255,255,0.5); box-shadow: 0 4px 20px rgba(0,0,0,0.05); }
+        .tab-btn.active { background: #4f46e5; color: white; box-shadow: 0 4px 12px rgba(79, 70, 229, 0.3); }
+        .hidden { display: none; }
+        .status-tag { font-size: 10px; font-weight: 800; padding: 2px 8px; border-radius: 999px; text-transform: uppercase; }
+        .status-confirmed { background: #dcfce7; color: #166534; }
+        .status-maybe { background: #fef9c3; color: #854d0e; }
+        .status-declined { background: #fee2e2; color: #991b1b; }
     </style>
 </head>
-<body class="p-4 md:p-8 min-h-screen">
+<body class="p-4 md:p-8 min-h-screen bg-slate-50">
 
-    <div id="wizard-overlay">
-        <div class="wizard-card relative overflow-hidden">
-            <div class="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500"></div>
-            
-            <div class="mb-6">
-                <span class="text-4xl">💍</span>
+    <div class="max-w-4xl mx-auto">
+        <header class="flex justify-between items-center mb-8">
+            <h1 class="text-3xl font-black text-slate-800 tracking-tighter">Wedding<span class="text-indigo-600">Elite</span></h1>
+            <div id="mini-summary" class="text-left text-xs font-bold text-slate-400">
+                יתרה: <span id="header-rem" class="text-indigo-600">₪0</span>
             </div>
-            
-            <h2 class="text-3xl font-black text-slate-800 mb-2">ברוכים הבאים!</h2>
-            <p class="text-slate-500 mb-8 text-lg leading-relaxed">
-                בואו נבנה לכם תקציב חתונה מנצח בשניות.<br>
-                רק תגידו לנו: <strong>מה התקציב הכולל?</strong>
-            </p>
+        </header>
 
-            <div class="relative max-w-[280px] mx-auto mb-8">
-                <span class="absolute top-1/2 right-4 -translate-y-1/2 text-gray-400 text-xl font-bold">₪</span>
-                <input id="wizard-input" type="number" 
-                       class="w-full text-center text-4xl font-black text-slate-800 border-b-2 border-slate-200 py-3 outline-none focus:border-indigo-500 transition placeholder:text-slate-200" 
-                       placeholder="150,000">
-            </div>
-
-            <button onclick="runWizard()" class="btn-magic w-full py-4 rounded-2xl text-lg font-bold mb-4">
-                ✨ צור לי תוכנית אוטומטית
-            </button>
-            
-            <button onclick="closeWizard()" class="text-sm text-slate-400 font-bold hover:text-slate-600 transition">
-                לא תודה, אגדיר ידנית
-            </button>
-        </div>
-    </div>
-
-    <div id="main-app" class="max-w-6xl mx-auto transition-all duration-500">
-        
-        <div class="glass-card mb-8 p-6 md:p-8 flex flex-col md:flex-row-reverse justify-between items-center gap-6 shadow-xl relative overflow-hidden">
-            <div class="text-center md:text-right z-10">
-                <h2 class="text-2xl font-black text-slate-800">הספירה לאחור...</h2>
-                <div class="flex items-center gap-2 mt-2 justify-center md:justify-end">
-                    <input id="date-in" type="datetime-local" class="text-xs border border-indigo-100 rounded-lg px-3 py-1.5 outline-none bg-white/80">
-                    <button onclick="saveWeddingDate()" class="text-[10px] bg-slate-800 text-white px-3 py-1.5 rounded-lg font-bold hover:bg-slate-700 transition">שמור 💾</button>
-                </div>
-            </div>
-            
-            <div id="countdown" class="flex flex-row-reverse gap-4 md:gap-8 text-indigo-600">
-                <div class="text-center"><span id="days" class="text-4xl md:text-5xl font-black block leading-none">00</span><span class="text-[10px] uppercase font-bold tracking-widest text-slate-400">ימים</span></div>
-                <div class="text-center"><span id="hours" class="text-4xl md:text-5xl font-black block leading-none">00</span><span class="text-[10px] uppercase font-bold tracking-widest text-slate-400">שעות</span></div>
-                <div class="text-center"><span id="minutes" class="text-4xl md:text-5xl font-black block leading-none">00</span><span class="text-[10px] uppercase font-bold tracking-widest text-slate-400">דקות</span></div>
-                <div class="text-center opacity-60"><span id="seconds" class="text-4xl md:text-5xl font-black block leading-none">00</span><span class="text-[10px] uppercase font-bold tracking-widest text-slate-400">שניות</span></div>
-            </div>
+        <div class="flex gap-2 mb-8 bg-slate-200/50 p-1.5 rounded-2xl">
+            <button onclick="switchTab('budget-section')" id="btn-budget" class="tab-btn active flex-1 py-3 rounded-xl font-bold transition-all">💰 תקציב</button>
+            <button onclick="switchTab('guests-section')" id="btn-guests" class="tab-btn flex-1 py-3 rounded-xl font-bold transition-all">👥 אורחים</button>
         </div>
 
-        <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
-            
-            <div id="cat-list" class="lg:col-span-7 space-y-5">
-                <div class="flex justify-between items-end px-2 mb-4">
-                    <h1 class="text-4xl font-black text-slate-800 italic uppercase tracking-tight">התקציב <span class="text-indigo-600">שלנו.</span></h1>
-                    <button onclick="showWizard()" class="text-xs font-bold text-indigo-500 bg-indigo-50 px-3 py-1 rounded-full hover:bg-indigo-100 transition">🔄 אשף אוטומטי</button>
-                </div>
-                </div>
-
-            <div class="lg:col-span-5">
-                <div class="dark-stats p-8 sticky top-8">
-                    <div class="w-full text-center mb-8">
-                        <p class="text-indigo-300 text-[10px] font-bold uppercase tracking-[0.2em] mb-2">יתרה לשימוש חופשי</p>
-                        <h3 id="rem-budget" class="text-5xl md:text-6xl font-black text-white tracking-tight">₪0</h3>
-                    </div>
-                    
-                    <div class="relative w-64 h-64 mx-auto mb-8 cursor-pointer group" onclick="triggerConfetti()">
-                        <canvas id="mainChart"></canvas>
-                        <div class="chart-center z-10">
-                            <p id="pct-val" class="text-5xl font-black text-white leading-none group-hover:scale-110 transition-transform duration-300">0%</p>
-                            <p class="text-gray-400 text-[10px] font-bold uppercase mt-2 tracking-widest">התוכנית מוכנה</p>
+        <div id="budget-section" class="space-y-6">
+            <div class="glass-card p-6 md:p-8 text-center bg-slate-900 text-white border-none shadow-2xl relative overflow-hidden">
+                <div class="relative z-10">
+                    <p class="text-indigo-300 text-[10px] font-bold uppercase tracking-widest mb-2">יתרה לניהול</p>
+                    <h2 id="rem-budget" class="text-5xl font-black mb-6 tracking-tight">₪0</h2>
+                    <div class="flex gap-4 justify-center items-center">
+                        <div class="text-center">
+                            <p id="pct-val" class="text-2xl font-black">0%</p>
+                            <p class="text-[8px] uppercase text-slate-400 font-bold">נוצל מהתקציב</p>
                         </div>
-                    </div>
-
-                    <div class="w-full space-y-4">
-                        <div class="bg-white/5 border border-white/10 p-5 rounded-2xl backdrop-blur-sm">
-                            <p class="text-gray-400 text-[10px] uppercase font-bold mb-1 text-right">יעד תקציבי כולל</p>
-                            <div class="flex gap-3">
-                                <input id="total-target" type="number" class="bg-transparent text-2xl font-black w-full outline-none text-white text-right font-mono" placeholder="0">
-                                <button onclick="updateBudgetTotal()" class="bg-emerald-500 hover:bg-emerald-400 text-white px-4 rounded-xl text-sm font-bold shadow-lg transition">עדכן</button>
-                            </div>
-                        </div>
-                        
-                        <div class="grid grid-cols-2 gap-4">
-                            <div class="bg-white/5 p-4 rounded-2xl text-center border border-white/5">
-                                <p class="text-gray-400 text-[10px] uppercase mb-1">השקעה לאורח</p>
-                                <p id="guest-cost" class="text-xl font-bold text-white">₪0</p>
-                            </div>
-                            <div class="bg-white/5 p-4 rounded-2xl text-center border border-white/5">
-                                <p class="text-gray-400 text-[10px] uppercase mb-1">כמות מוזמנים</p>
-                                <input id="guest-count" type="number" onchange="updateUI()" class="bg-transparent text-xl font-bold text-indigo-300 w-full text-center outline-none" value="400">
-                            </div>
+                        <div class="h-8 w-[1px] bg-slate-700"></div>
+                        <div class="text-center">
+                            <p id="total-val" class="text-2xl font-black">₪0</p>
+                            <p class="text-[8px] uppercase text-slate-400 font-bold">תקציב יעד</p>
                         </div>
                     </div>
                 </div>
             </div>
+            
+            <div id="cat-list" class="space-y-4">
+                </div>
+        </div>
+
+        <div id="guests-section" class="hidden space-y-6">
+            <div class="grid grid-cols-3 gap-4 mb-6">
+                <div class="glass-card p-4 text-center">
+                    <p id="stat-confirmed" class="text-2xl font-black text-emerald-600">0</p>
+                    <p class="text-[9px] font-bold text-slate-400 uppercase">מגיעים</p>
+                </div>
+                <div class="glass-card p-4 text-center">
+                    <p id="stat-maybe" class="text-2xl font-black text-amber-600">0</p>
+                    <p class="text-[9px] font-bold text-slate-400 uppercase">אולי</p>
+                </div>
+                <div class="glass-card p-4 text-center">
+                    <p id="stat-total" class="text-2xl font-black text-slate-800">0</p>
+                    <p class="text-[9px] font-bold text-slate-400 uppercase">סך הכל</p>
+                </div>
+            </div>
+
+            <div class="glass-card p-6 border-indigo-100 bg-white">
+                <h3 class="font-bold text-slate-800 mb-4 flex items-center gap-2">
+                    <span>➕ הוספת אורח/משפחה</span>
+                </h3>
+                <div class="grid grid-cols-2 gap-3 mb-4">
+                    <input id="guest-name" type="text" placeholder="שם האורח" class="col-span-2 p-3 bg-slate-50 rounded-xl outline-none focus:ring-2 ring-indigo-500 transition">
+                    <input id="guest-qty" type="number" placeholder="כמות" class="p-3 bg-slate-50 rounded-xl outline-none" value="1">
+                    <select id="guest-side" class="p-3 bg-slate-50 rounded-xl outline-none">
+                        <option value="חתן">צד חתן</option>
+                        <option value="כלה">צד כלה</option>
+                        <option value="משותף">משותף</option>
+                    </select>
+                </div>
+                <button onclick="addGuest()" class="w-full bg-indigo-600 text-white py-3 rounded-xl font-bold shadow-lg hover:bg-indigo-700 transition">הוסף לרשימה ✨</button>
+            </div>
+
+            <div id="guest-list" class="space-y-3">
+                </div>
         </div>
     </div>
 
     <script>
-        const API = "https://weddingplannerapp-i54n.onrender.com"; // ה-API שלך
-        let myChart;
-        let localData = { spent: 0, total: 0 };
-        
-        // הגדרת המבנה והאחוזים לאשף החכם
-        const cats = [
-            { name: 'המקום והאווירה', icon: '🏛️', items: [
-                {name: 'אולם אירועים', pct: 0.40}, 
-                {name: 'עיצוב חופה', pct: 0.03}, 
-                {name: 'תאורה והגברה', pct: 0.02}, 
-                {name: 'בר בסיסי', pct: 0.0}
-            ]},
-            { name: 'קולינריה', icon: '🍽️', items: [
-                {name: 'קייטרינג', pct: 0.0}, 
-                {name: 'בר אלכוהול משודרג', pct: 0.03}, 
-                {name: 'עמדת מתוקים', pct: 0.01}, 
-                {name: 'טעימות', pct: 0.0}
-            ]},
-            { name: 'מוזיקה ובידור', icon: '🎵', items: [
-                {name: 'DJ', pct: 0.05}, 
-                {name: 'להקת קבלת פנים', pct: 0.02}, 
-                {name: 'אטרקציות ואפקטים', pct: 0.01}
-            ]},
-            { name: 'תיעוד ומדיה', icon: '📷', items: [
-                {name: 'צלם סטילס', pct: 0.04}, 
-                {name: 'צלם וידאו', pct: 0.04}, 
-                {name: 'רחפן', pct: 0.01}, 
-                {name: 'מגנטים', pct: 0.01}
-            ]},
-            { name: 'כלה וחתן', icon: '👰🤵', items: [
-                {name: 'שמלת כלה', pct: 0.05}, 
-                {name: 'חליפת חתן', pct: 0.02}, 
-                {name: 'איפור ושיער', pct: 0.03}, 
-                {name: 'טבעות', pct: 0.01}
-            ]}
-        ];
+        const API = "https://weddingplannerapp-i54n.onrender.com"; // וודא שזה ה-URL שלך
+        let localData = { spent: 0, total: 0, guests: [] };
 
-        // --- לוגיקת האשף (Wizard) ---
-        function showWizard() {
-            document.getElementById('wizard-overlay').classList.add('flex');
-            // מחיקת הטשטוש כדי למנוע כפילות, הרקע הכהה של האשף יעשה את העבודה
-        }
-
-        function closeWizard() {
-            document.getElementById('wizard-overlay').classList.remove('flex');
-        }
-
-        function checkFirstTime() {
-            // אם התקציב הוא 0, נציג את האשף אוטומטית
-            if (!localData.total || localData.total === 0) {
-                showWizard();
-            }
-        }
-
-        async function runWizard() {
-            const budget = parseFloat(document.getElementById('wizard-input').value);
-            if (!budget || budget < 1000) {
-                alert("בבקשה להזין תקציב הגיוני 😊");
-                return;
-            }
-
-            // עדכון תקציב
-            document.getElementById('total-target').value = budget;
-            await updateBudgetTotal(true); 
-
-            // עדכון אוטומטי של הסעיפים
-            const promises = [];
-            cats.forEach(cat => {
-                cat.items.forEach(item => {
-                    if (item.pct > 0) {
-                        const val = Math.floor(budget * item.pct);
-                        // עדכון UI מקומי
-                        const el = document.getElementById(`in-${item.name}`);
-                        if(el) el.value = val;
-                        // שמירה לשרת
-                        promises.push(saveExp(item.name, `in-${item.name}`, `note-${item.name}`, true));
-                    }
-                });
-            });
-
-            await Promise.all(promises);
-            closeWizard();
-            refreshFromServer();
-            setTimeout(triggerConfetti, 500); // חגיגה קטנה
-        }
-
-        // --- פונקציות ליבה ---
-        
-        function render() {
-            const container = document.getElementById('cat-list');
-            // ניקוי והוספת כותרת
-            container.innerHTML = '<div class="flex justify-between items-end px-2 mb-4"><h1 class="text-4xl font-black text-slate-800 italic uppercase tracking-tight">התקציב <span class="text-indigo-600">שלנו.</span></h1><button onclick="showWizard()" class="text-xs font-bold text-indigo-500 bg-indigo-50 px-3 py-1 rounded-full hover:bg-indigo-100 transition">🔄 אשף אוטומטי</button></div>';
+        function switchTab(id) {
+            document.getElementById('budget-section').classList.add('hidden');
+            document.getElementById('guests-section').classList.add('hidden');
+            document.getElementById('btn-budget').classList.remove('active');
+            document.getElementById('btn-guests').classList.remove('active');
             
-            cats.forEach((c, i) => {
-                const id = `list-${i}`;
-                container.innerHTML += `
-                    <div class="glass-card p-6 shadow-sm border-r-4 border-indigo-500 hover:shadow-md transition duration-300">
-                        <div class="flex justify-between items-center cursor-pointer" onclick="toggleDropdown('${id}')">
-                            <div class="flex items-center gap-4">
-                                <span class="text-2xl">${c.icon}</span>
-                                <span class="text-xl font-bold text-slate-700">${c.name}</span>
-                            </div>
-                            <span class="text-xs font-bold text-indigo-400 bg-indigo-50 px-2 py-1 rounded-lg">הצג פירוט ▼</span>
-                        </div>
-                        <div id="${id}" class="dropdown-content mt-4 pt-4 border-t border-slate-100 space-y-3">
-                            ${c.items.map(item => `
-                                <div class="bg-white/50 p-3 rounded-xl flex flex-col gap-2 border border-slate-100 hover:border-indigo-200 transition">
-                                    <div class="flex justify-between items-center">
-                                        <span class="font-bold text-slate-700 text-sm">${item.name}</span>
-                                        <div class="flex gap-2 items-center">
-                                            <input id="in-${item.name}" type="number" class="w-24 bg-white text-center rounded-lg py-1 text-sm font-black text-indigo-600 border border-slate-200 focus:border-indigo-500 outline-none" placeholder="0">
-                                            <button onclick="saveExp('${item.name}', 'in-${item.name}', 'note-${item.name}')" class="bg-emerald-500 text-white w-8 h-8 rounded-lg flex items-center justify-center shadow-sm hover:bg-emerald-600 transition">💾</button>
-                                        </div>
-                                    </div>
-                                    <input id="note-${item.name}" type="text" placeholder="הערה..." class="text-xs bg-transparent border-b border-transparent focus:border-indigo-200 outline-none w-full text-slate-400">
-                                </div>`).join('')}
-                        </div>
-                    </div>`;
-            });
+            document.getElementById(id).classList.remove('hidden');
+            if(id === 'budget-section') document.getElementById('btn-budget').classList.add('active');
+            if(id === 'guests-section') document.getElementById('btn-guests').classList.add('active');
         }
 
-        async function saveExp(cat, inputId, noteId, skipRefresh = false) {
-            const amount = parseFloat(document.getElementById(inputId).value) || 0;
-            const note = document.getElementById(noteId) ? document.getElementById(noteId).value : "";
-            
-            await fetch(`${API}/budget/add`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ category: cat, amount: amount, notes: note })
-            });
-            
-            if (!skipRefresh) refreshFromServer();
-        }
-
-        async function updateBudgetTotal(skipRefresh = false) {
-            const amount = parseFloat(document.getElementById('total-target').value) || 0;
-            await fetch(`${API}/budget/update_total?amount=${amount}`, { method: 'POST' });
-            if (!skipRefresh) refreshFromServer();
-        }
-
-        async function refreshFromServer() {
+        async function refreshData() {
             try {
-                const res = await fetch(`${API}/budget/summary`);
-                const data = await res.json();
-                localData = data;
+                const bRes = await fetch(`${API}/budget/summary`);
+                const budget = await bRes.json();
+                
+                const gRes = await fetch(`${API}/guests`);
+                const guests = await gRes.json();
+                
+                localData.spent = budget.spent;
+                localData.total = budget.total;
+                localData.guests = guests;
+                
                 updateUI();
-                checkFirstTime(); 
-            } catch (e) { console.error("Sync Error", e); }
+            } catch(e) { console.error("Sync error", e); }
         }
 
         function updateUI() {
-            const total = localData.total || 0;
-            const spent = localData.spent || 0;
-            const rem = total - spent;
-            const guests = parseInt(document.getElementById('guest-count').value) || 400;
-
+            // Update Budget UI
+            const rem = localData.total - localData.spent;
             document.getElementById('rem-budget').innerText = `₪${rem.toLocaleString()}`;
-            document.getElementById('total-target').value = total > 0 ? total : "";
-            
-            const pct = total > 0 ? Math.round((spent/total)*100) : 0;
+            document.getElementById('header-rem').innerText = `₪${rem.toLocaleString()}`;
+            document.getElementById('total-val').innerText = `₪${localData.total.toLocaleString()}`;
+            const pct = localData.total > 0 ? Math.round((localData.spent/localData.total)*100) : 0;
             document.getElementById('pct-val').innerText = `${pct}%`;
-            document.getElementById('guest-cost').innerText = `₪${Math.round(spent/guests)}`;
+
+            // Update Guests UI
+            let confirmed = 0, maybe = 0, total = 0;
+            const list = document.getElementById('guest-list');
+            list.innerHTML = "";
             
-            draw(spent, total);
+            localData.guests.forEach(g => {
+                total += g.count;
+                if(g.status === 'confirmed') confirmed += g.count;
+                if(g.status === 'maybe') maybe += g.count;
+                
+                list.innerHTML += `
+                    <div class="glass-card p-4 flex justify-between items-center bg-white">
+                        <div>
+                            <p class="font-bold text-slate-800">${g.name} <span class="text-indigo-500 text-sm">(${g.count})</span></p>
+                            <p class="text-[10px] text-slate-400 font-bold uppercase">${g.side}</p>
+                        </div>
+                        <div class="flex items-center gap-3">
+                            <span class="status-tag status-${g.status}">${g.status === 'confirmed' ? 'מגיע' : g.status === 'maybe' ? 'אולי' : 'לא מגיע'}</span>
+                            <button onclick="deleteGuest(${g.id})" class="text-slate-300 hover:text-red-500 transition">🗑️</button>
+                        </div>
+                    </div>
+                `;
+            });
+
+            document.getElementById('stat-confirmed').innerText = confirmed;
+            document.getElementById('stat-maybe').innerText = maybe;
+            document.getElementById('stat-total').innerText = total;
         }
 
-        function draw(s, t) {
-            const ctx = document.getElementById('mainChart').getContext('2d');
-            if (myChart) myChart.destroy();
-            const rem = t - s > 0 ? t - s : 0;
+        async function addGuest() {
+            const name = document.getElementById('guest-name').value;
+            const qty = parseInt(document.getElementById('guest-qty').value);
+            const side = document.getElementById('guest-side').value;
             
-            // צבעים מותאמים אישית
-            myChart = new Chart(ctx, {
-                type: 'doughnut',
-                data: { 
-                    datasets: [{ 
-                        data: [s, rem], 
-                        backgroundColor: ['#6366f1', 'rgba(255,255,255,0.05)'], 
-                        borderWidth: 0,
-                        borderRadius: 20 
-                    }] 
-                },
-                options: { 
-                    cutout: '85%', 
-                    plugins: { legend: { display: false }, tooltip: { enabled: false } }, 
-                    animation: { duration: 1500, easing: 'easeOutQuart' } 
-                }
+            if(!name) return alert("אנא הזן שם אורח");
+            
+            await fetch(`${API}/guests/add`, {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({ name, count: qty, status: 'confirmed', side })
             });
+            
+            document.getElementById('guest-name').value = "";
+            refreshData();
+            triggerConfetti();
+        }
+
+        async function deleteGuest(id) {
+            if(!confirm("להסיר את האורח?")) return;
+            await fetch(`${API}/guests/${id}`, { method: 'DELETE' });
+            refreshData();
         }
 
         function triggerConfetti() {
-            confetti({
-                particleCount: 150,
-                spread: 100,
-                origin: { y: 0.6 },
-                colors: ['#6366f1', '#a855f7', '#ec4899']
-            });
+            confetti({ particleCount: 100, spread: 70, origin: { y: 0.6 } });
         }
 
-        function saveWeddingDate() {
-            const val = document.getElementById('date-in').value;
-            if (val) { localStorage.setItem('wedding_date', val); updateCountdown(); }
-        }
-
-        function updateCountdown() {
-            const saved = localStorage.getItem('wedding_date');
-            if (!saved) return;
-            const diff = new Date(saved).getTime() - new Date().getTime();
-            if (diff > 0) {
-                document.getElementById('days').innerText = String(Math.floor(diff/86400000)).padStart(2, '0');
-                document.getElementById('hours').innerText = String(Math.floor((diff%86400000)/3600000)).padStart(2, '0');
-                document.getElementById('minutes').innerText = String(Math.floor((diff%3600000)/60000)).padStart(2, '0');
-                document.getElementById('seconds').innerText = String(Math.floor((diff%60000)/1000)).padStart(2, '0');
-            }
-        }
-
-        function toggleDropdown(id) { 
-            const el = document.getElementById(id);
-            el.classList.toggle('active');
-        }
-
-        // הפעלה ראשונית
-        render();
-        refreshFromServer();
-        setInterval(updateCountdown, 1000);
-        updateCountdown();
+        // Initial Load
+        refreshData();
     </script>
 </body>
 </html>
