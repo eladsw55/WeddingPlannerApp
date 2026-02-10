@@ -3,79 +3,77 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Wedding Elite Pro | Management</title>
+    <title>Wedding Elite Pro | Optimistic</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Assistant:wght@300;400;700&display=swap" rel="stylesheet">
     <style>
         body { 
             font-family: 'Assistant', sans-serif; 
-            background: linear-gradient(rgba(255, 255, 255, 0.4), rgba(255, 255, 255, 0.4)), 
+            background: linear-gradient(rgba(255, 255, 255, 0.3), rgba(255, 255, 255, 0.3)), 
                         url('https://images.unsplash.com/photo-1519741497674-611481863552?ixlib=rb-4.0.3&auto=format&fit=crop&w=1920&q=80');
             background-size: cover; background-position: center; background-attachment: fixed;
         }
-        .glass-card { background: rgba(255, 255, 255, 0.9); backdrop-filter: blur(10px); border-radius: 25px; }
-        .dark-stats { background: #1a2233; color: white; border-radius: 30px; }
+        .glass-card { background: rgba(255, 255, 255, 0.9); backdrop-filter: blur(15px); border-radius: 30px; }
+        .dark-stats { background: #1a2233; color: white; border-radius: 35px; display: flex; flex-direction: column; align-items: center; justify-content: center; position: relative; }
         .dropdown-content { display: none; }
-        .dropdown-content.active { display: block; }
+        .dropdown-content.active { display: block; animation: slideDown 0.3s ease; }
+        @keyframes slideDown { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
     </style>
 </head>
-<body class="p-6">
+<body class="p-4 md:p-8">
     <div class="max-w-6xl mx-auto">
         
-        <div class="glass-card mb-8 p-8 flex flex-row-reverse justify-between items-center shadow-xl">
+        <div class="glass-card mb-8 p-8 flex flex-row-reverse justify-between items-center shadow-2xl">
             <div class="text-right">
                 <h2 class="text-2xl font-black text-slate-800">הספירה לאחור...</h2>
                 <button onclick="toggleDropdown('settings')" class="text-xs text-indigo-500 underline">הגדר תאריך ⚙️</button>
             </div>
-            <div id="countdown" class="flex flex-row gap-6 text-indigo-600 font-bold text-3xl">
-                <div class="text-center"><span id="days">00</span><p class="text-[10px] text-gray-400">ימים</p></div>
-                <div class="text-center"><span id="hours">00</span><p class="text-[10px] text-gray-400">שעות</p></div>
-                <div class="text-center"><span id="minutes">00</span><p class="text-[10px] text-gray-400">דקות</p></div>
+            <div id="countdown" class="flex flex-row gap-8 text-indigo-600 font-black text-4xl">
+                <div class="text-center"><span id="days">00</span><p class="text-[10px] text-gray-400 uppercase">ימים</p></div>
+                <div class="text-center"><span id="hours">00</span><p class="text-[10px] text-gray-400 uppercase">שעות</p></div>
+                <div class="text-center"><span id="minutes">00</span><p class="text-[10px] text-gray-400 uppercase">דקות</p></div>
             </div>
         </div>
 
-        <div id="settings" class="dropdown-content glass-card p-4 mb-6 text-center">
-            <input id="date-in" type="datetime-local" class="border rounded-full px-4 py-2 outline-none">
-            <button onclick="saveDate()" class="bg-indigo-600 text-white px-6 py-2 rounded-full mr-2">שמור תאריך</button>
+        <div id="settings" class="dropdown-content glass-card p-6 mb-8 text-center border-2 border-indigo-100">
+            <input id="date-in" type="datetime-local" class="border rounded-full px-6 py-2 outline-none focus:ring-2 focus:ring-indigo-400">
+            <button onclick="saveDate()" class="bg-indigo-600 text-white px-8 py-2 rounded-full mr-3 font-bold">עדכן תאריך</button>
         </div>
 
         <div class="grid grid-cols-1 lg:grid-cols-12 gap-10">
-            <div id="categories-list" class="lg:col-span-7 space-y-4">
-                <h1 class="text-4xl font-black text-slate-800 mb-6">ניהול <span class="text-indigo-600">ההוצאות</span></h1>
-                </div>
+            <div id="cat-list" class="lg:col-span-7 space-y-4">
+                <h1 class="text-4xl font-black text-slate-800 mb-8 px-2">ניהול <span class="text-indigo-600">ההוצאות</span></h1>
+            </div>
 
             <div class="lg:col-span-5">
-                <div class="dark-stats p-8 sticky top-10 shadow-2xl">
-                    <div class="mb-8">
-                        <p class="text-gray-400 text-xs font-bold uppercase tracking-widest mb-1">יתרה שנותרה</p>
-                        <h3 id="rem-budget" class="text-5xl font-black text-white">₪0</h3>
+                <div class="dark-stats p-10 sticky top-10 shadow-2xl min-h-[550px]">
+                    <div class="w-full text-center mb-6">
+                        <p class="text-gray-400 text-xs font-bold tracking-widest uppercase">יתרה שנותרה</p>
+                        <h3 id="rem-budget" class="text-6xl font-black text-white mt-2">₪0</h3>
                     </div>
                     
-                    <div class="relative h-64 mb-8">
+                    <div class="relative w-full aspect-square max-w-[280px] mb-8">
                         <canvas id="mainChart"></canvas>
-                        <div class="absolute inset-0 flex flex-col items-center justify-center">
-                            <span id="pct-val" class="text-4xl font-black text-white">0%</span>
-                            <span class="text-gray-400 text-[10px] uppercase">ניצול</span>
+                        <div class="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
+                            <span id="pct-val" class="text-5xl font-black text-white leading-none">0%</span>
+                            <span class="text-gray-400 text-[10px] font-bold uppercase mt-2">ניצול</span>
                         </div>
                     </div>
 
-                    <div class="bg-white/5 p-4 rounded-2xl mb-6">
-                        <p class="text-gray-400 text-xs mb-2">עדכון תקציב כולל (₪)</p>
-                        <div class="flex gap-2">
-                            <input id="total-budget-in" type="number" class="flex-1 bg-transparent border border-gray-700 rounded-lg p-2 text-white outline-none" placeholder="180000">
-                            <button onclick="updateTotalBudget()" class="bg-indigo-600 px-4 py-2 rounded-lg text-sm font-bold">עדכן</button>
+                    <div class="w-full space-y-4">
+                        <div class="bg-white/5 border border-white/10 p-4 rounded-2xl">
+                            <p class="text-gray-400 text-[10px] mb-1 uppercase font-bold">תקציב יעד (₪)</p>
+                            <input id="total-target" type="number" onchange="updateTotal()" class="bg-transparent text-xl font-bold w-full outline-none text-indigo-400" placeholder="180000">
                         </div>
-                    </div>
-
-                    <div class="grid grid-cols-2 gap-4 text-center">
-                        <div class="bg-gray-800/50 p-4 rounded-2xl">
-                            <p class="text-gray-400 text-[10px] uppercase mb-1">כיסוי לאורח</p>
-                            <p id="guest-cost" class="text-xl font-bold">₪0</p>
-                        </div>
-                        <div class="bg-gray-800/50 p-4 rounded-2xl">
-                            <p class="text-gray-400 text-[10px] uppercase mb-1">אורחים</p>
-                            <p class="text-xl font-bold text-indigo-400">400</p>
+                        <div class="grid grid-cols-2 gap-4">
+                            <div class="bg-gray-800/50 p-4 rounded-2xl text-center">
+                                <p class="text-gray-400 text-[10px] uppercase">לפי 400 איש</p>
+                                <p id="guest-cost" class="text-xl font-bold italic">₪0</p>
+                            </div>
+                            <div class="bg-gray-800/50 p-4 rounded-2xl text-center flex items-center justify-center">
+                                <p class="text-indigo-300 font-bold">VIP Event</p>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -86,18 +84,19 @@
     <script>
         const API = "https://weddingplannerapp-i54n.onrender.com";
         let myChart;
+        let localData = { spent: 0, total: 180000 };
 
         const cats = [
-            { name: 'המקום והאווירה', icon: '🏛️', items: ['אולם אירועים', 'עיצוב חופה'] },
-            { name: 'קולינריה', icon: '🍽️', items: ['קייטרינג', 'בר אלכוהול'] },
-            { name: 'מוזיקה ובידור', icon: '🎵', items: ['DJ', 'אטרקציות'] }
+            { name: 'המקום והאווירה', icon: '🏛️', items: ['אולם', 'עיצוב חופה'] },
+            { name: 'קולינריה', icon: '🍽️', items: ['קייטרינג', 'בר'] },
+            { name: 'מוזיקה וצילום', icon: '🎵', items: ['DJ', 'צילום', 'מגנטים'] }
         ];
 
         function render() {
-            const container = document.getElementById('categories-list');
+            const container = document.getElementById('cat-list');
             cats.forEach((c, i) => {
                 container.innerHTML += `
-                    <div class="glass-card p-6 shadow-sm">
+                    <div class="glass-card p-6 shadow-sm hover:shadow-md transition">
                         <div class="flex justify-between items-center cursor-pointer" onclick="toggleDropdown('list-${i}')">
                             <div class="flex items-center gap-4"><span class="text-2xl">${c.icon}</span><span class="text-xl font-bold text-slate-700">${c.name}</span></div>
                             <span class="text-gray-300">▼</span>
@@ -107,8 +106,8 @@
                                 <div class="flex justify-between items-center">
                                     <span class="text-slate-600 font-medium">${item}</span>
                                     <div class="flex gap-2">
-                                        <input id="in-${item}" type="number" onchange="saveExp('${item}', 'in-${item}')" class="w-24 bg-gray-50 text-center rounded-lg py-1 outline-none" placeholder="₪0">
-                                        <button onclick="saveExp('${item}', 'in-${item}')" class="text-green-500 font-bold">✓</button>
+                                        <input id="in-${item}" type="number" onchange="optimisticSave('${item}', this.value)" class="w-24 bg-gray-50 text-center rounded-lg py-1 outline-none font-bold" placeholder="₪0">
+                                        <span id="status-${item}" class="text-xs self-center"></span>
                                     </div>
                                 </div>
                             `).join('')}
@@ -117,33 +116,43 @@
             });
         }
 
-        async function fetchAll() {
+        // Optimistic Update: Update UI first, then server
+        async function optimisticSave(cat, val) {
+            const amount = parseFloat(val) || 0;
+            document.getElementById(`status-${cat}`).innerText = "⌛";
+            
+            // UI Update immediate
+            localData.spent += amount; 
+            updateUI();
+
             try {
-                const res = await fetch(`${API}/budget/summary`);
-                const d = await res.json();
-                document.getElementById('rem-budget').innerText = `₪${d.remaining.toLocaleString()}`;
-                document.getElementById('pct-val').innerText = `${Math.round((d.spent / d.total) * 100)}%`;
-                document.getElementById('guest-cost').innerText = `₪${Math.round(d.spent / 400)}`;
-                document.getElementById('total-budget-in').value = d.total;
-                draw(d.spent, d.remaining);
-            } catch (e) { console.error(e); }
+                const res = await fetch(`${API}/expenses`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ category: cat, amount: amount, notes: "optimistic" })
+                });
+                if (res.ok) {
+                    document.getElementById(`status-${cat}`).innerText = "✅";
+                    setTimeout(() => document.getElementById(`status-${cat}`).innerText = "", 2000);
+                    refreshFromServer();
+                }
+            } catch (e) { alert("שגיאה בסנכרון"); }
         }
 
-        async function saveExp(name, id) {
-            const val = document.getElementById(id).value;
-            await fetch(`${API}/expenses`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ category: name, amount: parseFloat(val) || 0, notes: "auto" })
-            });
-            fetchAll();
+        async function refreshFromServer() {
+            const res = await fetch(`${API}/budget/summary`);
+            const d = await res.json();
+            localData = d;
+            updateUI();
         }
 
-        async function updateTotalBudget() {
-            const val = document.getElementById('total-budget-in').value;
-            // כאן אפשר להוסיף קריאת API לעדכון ה-Total ב-Backend במידת הצורך
-            alert("התקציב המתוכנן עודכן ל-₪" + val);
-            fetchAll();
+        function updateUI() {
+            const rem = localData.total - localData.spent;
+            document.getElementById('rem-budget').innerText = `₪${rem.toLocaleString()}`;
+            document.getElementById('pct-val').innerText = `${Math.round((localData.spent / localData.total) * 100)}%`;
+            document.getElementById('guest-cost').innerText = `₪${Math.round(localData.spent / 400)}`;
+            document.getElementById('total-target').value = localData.total;
+            draw(localData.spent, rem);
         }
 
         function draw(s, r) {
@@ -151,8 +160,8 @@
             if (myChart) myChart.destroy();
             myChart = new Chart(ctx, {
                 type: 'doughnut',
-                data: { datasets: [{ data: [s, r], backgroundColor: ['#4f46e5', '#334155'], borderWidth: 0 }] },
-                options: { cutout: '85%', plugins: { legend: { display: false } } }
+                data: { datasets: [{ data: [s, r > 0 ? r : 0], backgroundColor: ['#4f46e5', '#334155'], borderWidth: 0 }] },
+                options: { cutout: '85%', plugins: { legend: { display: false } }, animation: { duration: 500 } }
             });
         }
 
@@ -170,7 +179,7 @@
         }, 1000);
 
         render();
-        fetchAll();
+        refreshFromServer();
     </script>
 </body>
 </html>
