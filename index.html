@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Wedding Elite Pro | Production Ready</title>
+    <title>Wedding Elite Pro | Final Fix</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Assistant:wght@300;400;700&display=swap" rel="stylesheet">
@@ -80,8 +80,8 @@
         let localData = { spent: 0, total: 0 };
         const cats = [
             { name: 'המקום והאווירה', icon: '🏛️', items: ['אולם', 'עיצוב', 'בר'] },
-            { name: 'קולינריה', icon: '🍽️', items: ['קייטרינג', 'אלכוהול', 'מתוקים'] },
-            { name: 'מדיה ובידור', icon: '📷', items: ['DJ', 'צלם', 'מגנטים'] }
+            { name: 'מדיה ובידור', icon: '📷', items: ['DJ', 'צלם', 'מגנטים'] },
+            { name: 'קולינריה', icon: '🍽️', items: ['קייטרינג', 'אלכוהול', 'מתוקים'] }
         ];
 
         function render() {
@@ -102,10 +102,10 @@
                                         <span class="font-bold text-slate-600">${item}</span>
                                         <div class="flex gap-2 items-center">
                                             <input id="in-${item}" type="number" class="w-24 bg-white text-center rounded-lg py-1 outline-none font-bold" placeholder="₪0">
-                                            <button onclick="saveExp('${item}', 'in-${item}', 'note-${item}')" class="bg-emerald-500 text-white px-3 py-1 rounded-lg text-xs font-bold shadow-md">עדכן ✅</button>
+                                            <button onclick="saveExp('${item}', 'in-${item}', 'note-${item}')" class="bg-emerald-500 text-white px-3 py-1 rounded-lg text-xs font-bold shadow-md">עדכן 💾</button>
                                         </div>
                                     </div>
-                                    <input id="note-${item}" type="text" placeholder="הערה..." class="text-xs bg-transparent border-b border-gray-200 outline-none w-full text-slate-500 italic">
+                                    <input id="note-${item}" type="text" placeholder="הערה לסעיף..." class="text-xs bg-transparent border-b border-gray-200 outline-none w-full text-slate-500 italic">
                                 </div>`).join('')}
                         </div>
                     </div>`;
@@ -116,6 +116,10 @@
             const amount = parseFloat(document.getElementById(inputId).value) || 0;
             const note = document.getElementById(noteId).value;
             
+            // עדכון מיידי ב-UI לפני הקריאה לשרת (Optimistic UI)
+            localData.spent += amount;
+            updateUI();
+
             await fetch(`${API}/budget/add`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -125,15 +129,25 @@
         }
 
         async function updateBudgetTotal() {
-            const amount = parseFloat(document.getElementById('total-target').value);
-            await fetch(`${API}/budget/update_total?amount=${amount}`, { method: 'POST' });
+            const amount = parseFloat(document.getElementById('total-target').value) || 0;
+            
+            // עדכון מיידי של ה-State המקומי כדי לראות שינוי ביתרה
+            localData.total = amount;
+            updateUI();
+            
+            // שליחה לשרת כפרמטר URL בדיוק כמו שה-FastAPI מצפה
+            await fetch(`${API}/budget/update_total?amount=${amount}`, {
+                method: 'POST'
+            });
             refreshFromServer();
         }
 
         async function refreshFromServer() {
             try {
                 const res = await fetch(`${API}/budget/summary`);
-                localData = await res.json();
+                const data = await res.json();
+                localData.total = data.total;
+                localData.spent = data.spent;
                 updateUI();
             } catch (e) { console.error("Syncing..."); }
         }
@@ -157,7 +171,7 @@
             myChart = new Chart(ctx, {
                 type: 'doughnut',
                 data: { datasets: [{ data: [s, r > 0 ? r : 0], backgroundColor: ['#4f46e5', '#334155'], borderWidth: 0 }] },
-                options: { cutout: '85%', plugins: { legend: { display: false } } }
+                options: { cutout: '85%', plugins: { legend: { display: false } }, animation: { duration: 500 } }
             });
         }
 
@@ -172,9 +186,7 @@
         function updateCountdown() {
             const saved = localStorage.getItem('wedding_date');
             if (!saved) return;
-            const target = new Date(saved).getTime();
-            const now = new Date().getTime();
-            const diff = target - now;
+            const diff = new Date(saved).getTime() - new Date().getTime();
             if (diff > 0) {
                 document.getElementById('days').innerText = String(Math.floor(diff/86400000)).padStart(2, '0');
                 document.getElementById('hours').innerText = String(Math.floor((diff%86400000)/3600000)).padStart(2, '0');
@@ -184,6 +196,7 @@
         }
 
         function toggleDropdown(id) { document.getElementById(id).classList.toggle('active'); }
+
         render();
         refreshFromServer();
         setInterval(updateCountdown, 1000);
