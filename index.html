@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Wedding Elite Pro | Official Dashboard</title>
+    <title>Wedding Elite Pro | Production</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Assistant:wght@300;400;700&display=swap" rel="stylesheet">
@@ -12,7 +12,7 @@
             font-family: 'Assistant', sans-serif; 
             background: linear-gradient(rgba(255, 255, 255, 0.4), rgba(255, 255, 255, 0.4)), 
                         url('https://images.unsplash.com/photo-1519741497674-611481863552?ixlib=rb-4.0.3&auto=format&fit=crop&w=1920&q=80');
-            background-size: cover; background-position: center; background-attachment: fixed;
+            background-size: cover; background-position: center; background-attachment: fixed; min-height: 100vh;
         }
         .glass-card { background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(12px); border-radius: 30px; }
         .dark-stats { background: #1a2233; color: white; border-radius: 35px; position: relative; }
@@ -25,26 +25,27 @@
 <body class="p-4 md:p-8">
     <div class="max-w-6xl mx-auto">
         
-        <div class="glass-card mb-8 p-8 flex flex-row-reverse justify-between items-center shadow-xl border border-white/50">
+        <div class="glass-card mb-8 p-8 flex flex-row-reverse justify-between items-center shadow-2xl border border-white/50">
             <div class="text-right">
                 <h2 class="text-2xl font-black text-slate-800">הספירה לאחור...</h2>
                 <button onclick="toggleDropdown('settings')" class="text-xs text-indigo-500 underline">הגדר תאריך ⚙️</button>
             </div>
-            <div id="countdown" class="flex flex-row-reverse gap-8 text-indigo-600 font-black text-4xl">
+            <div id="countdown" class="flex flex-row-reverse gap-6 text-indigo-600 font-black text-4xl">
                 <div class="text-center"><span id="days">00</span><p class="text-[10px] text-gray-400">ימים</p></div>
                 <div class="text-center"><span id="hours">00</span><p class="text-[10px] text-gray-400">שעות</p></div>
                 <div class="text-center"><span id="minutes">00</span><p class="text-[10px] text-gray-400">דקות</p></div>
+                <div class="text-center text-indigo-400 opacity-70"><span id="seconds">00</span><p class="text-[10px] text-gray-400">שניות</p></div>
             </div>
         </div>
 
         <div id="settings" class="dropdown-content glass-card p-6 mb-8 text-center border-2 border-indigo-100">
             <input id="date-in" type="datetime-local" class="border rounded-full px-6 py-2 outline-none">
-            <button onclick="saveDate()" class="bg-indigo-600 text-white px-8 py-2 rounded-full mr-3 font-bold">שמור</button>
+            <button onclick="saveDate()" class="bg-indigo-600 text-white px-8 py-2 rounded-full mr-3 font-bold">עדכן תאריך</button>
         </div>
 
         <div class="grid grid-cols-1 lg:grid-cols-12 gap-10">
             <div id="cat-list" class="lg:col-span-7 space-y-4">
-                <h1 class="text-4xl font-black text-slate-800 mb-8 px-2 uppercase">ניהול <span class="text-indigo-600 italic">המספרים.</span></h1>
+                <h1 class="text-4xl font-black text-slate-800 mb-8 px-2 uppercase tracking-tight">ניהול <span class="text-indigo-600 italic">המספרים.</span></h1>
             </div>
 
             <div class="lg:col-span-5">
@@ -57,20 +58,20 @@
                     <div class="relative w-full aspect-square max-w-[280px] mb-8">
                         <canvas id="mainChart"></canvas>
                         <div class="chart-center">
-                            <p id="pct-val" class="text-5xl font-black text-white">0%</p>
-                            <p class="text-gray-400 text-[10px] font-bold uppercase">ניצול</p>
+                            <p id="pct-val" class="text-5xl font-black text-white leading-none">0%</p>
+                            <p class="text-gray-400 text-[10px] font-bold uppercase mt-1">ניצול</p>
                         </div>
                     </div>
 
                     <div class="w-full space-y-4">
-                        <div class="bg-white/5 border border-white/10 p-4 rounded-3xl">
+                        <div class="bg-white/5 border border-white/10 p-5 rounded-3xl">
                             <p class="text-gray-400 text-[10px] uppercase font-bold mb-1">תקציב יעד כולל</p>
                             <input id="total-target" type="number" onchange="updateTotal()" class="bg-transparent text-2xl font-black w-full outline-none text-white" value="180000">
                         </div>
                         <div class="grid grid-cols-2 gap-4 text-center">
                             <div class="bg-gray-800/50 p-4 rounded-2xl">
                                 <p class="text-gray-400 text-[10px] uppercase mb-1">כיסוי לאורח</p>
-                                <p id="guest-cost" class="text-xl font-bold italic">₪0</p>
+                                <p id="guest-cost" class="text-xl font-bold italic text-white">₪0</p>
                             </div>
                             <div class="bg-gray-800/50 p-4 rounded-2xl">
                                 <p class="text-gray-400 text-[10px] uppercase mb-1">מוזמנים</p>
@@ -123,15 +124,15 @@
         async function optimisticSave(cat, val) {
             const amount = parseFloat(val) || 0;
             localData.spent += amount; 
-            updateUI(); // תגובה מיידית למסך
+            updateUI(); // Optimistic update
             try {
                 await fetch(`${API}/expenses`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ category: cat, amount: amount, notes: "prod" })
+                    body: JSON.stringify({ category: cat, amount: amount, notes: "prod-v1" })
                 });
                 refreshFromServer();
-            } catch (e) { console.error("Sync..."); }
+            } catch (e) { console.error("Network Error"); }
         }
 
         async function refreshFromServer() {
@@ -140,7 +141,7 @@
                 const d = await res.json();
                 localData = d;
                 updateUI();
-            } catch (e) { console.error("Offline"); }
+            } catch (e) { console.error("Offline Mode"); }
         }
 
         function updateUI() {
@@ -164,20 +165,33 @@
         }
 
         function toggleDropdown(id) { document.getElementById(id).classList.toggle('active'); }
-        function saveDate() { localStorage.setItem('wedding_date', document.getElementById('date-in').value); toggleDropdown('settings'); }
         
-        setInterval(() => {
-            const wedding = new Date(localStorage.getItem('wedding_date') || "2026-05-20").getTime();
-            const diff = wedding - new Date().getTime();
+        function saveDate() {
+            const val = document.getElementById('date-in').value;
+            if (val) {
+                localStorage.setItem('wedding_date', val);
+                toggleDropdown('settings');
+                updateCountdown();
+            }
+        }
+
+        function updateCountdown() {
+            const saved = localStorage.getItem('wedding_date');
+            const target = saved ? new Date(saved).getTime() : new Date("2026-05-20T19:30:00").getTime();
+            const now = new Date().getTime();
+            const diff = target - now;
             if (diff > 0) {
                 document.getElementById('days').innerText = String(Math.floor(diff / (1000 * 60 * 60 * 24))).padStart(2, '0');
                 document.getElementById('hours').innerText = String(Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60))).padStart(2, '0');
                 document.getElementById('minutes').innerText = String(Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60))).padStart(2, '0');
+                document.getElementById('seconds').innerText = String(Math.floor((diff % (1000 * 60)) / 1000)).padStart(2, '0');
             }
-        }, 1000);
+        }
 
+        setInterval(updateCountdown, 1000);
         render();
         refreshFromServer();
+        updateCountdown();
     </script>
 </body>
 </html>
