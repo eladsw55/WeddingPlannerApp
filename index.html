@@ -15,7 +15,6 @@
         .dropdown-content.active { display: block; animation: slideIn 0.3s ease; }
         .chart-center { position: absolute; top: 52%; left: 50%; transform: translate(-50%, -50%); text-align: center; pointer-events: none; }
         @keyframes slideIn { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
-        /* שיפור ויזואלי לכפתור עדכן */
         .btn-update { transition: all 0.2s ease; }
         .btn-update:active { transform: scale(0.9); filter: brightness(1.2); }
     </style>
@@ -28,7 +27,7 @@
                 <h2 class="text-2xl font-black text-slate-800">מתקרבים לרגע המרגש...</h2>
                 <div class="flex gap-2 mt-2">
                     <input id="date-in" type="datetime-local" class="text-xs border rounded-lg px-2 py-1 outline-none">
-                    <button onclick="saveWeddingDate()" class="text-[10px] bg-indigo-600 text-white px-2 py-1 rounded-lg hover:bg-indigo-700 transition">עדכן תאריך ⚙️</button>
+                    <button onclick="saveWeddingDate()" class="text-[10px] bg-indigo-600 text-white px-2 py-1 rounded-lg">עדכן תאריך ⚙️</button>
                 </div>
             </div>
             <div id="countdown" class="flex flex-row-reverse gap-6 text-indigo-600 font-black text-4xl">
@@ -47,8 +46,8 @@
             <div class="lg:col-span-5">
                 <div class="dark-stats p-10 sticky top-10 min-h-[620px]">
                     <div class="w-full text-center mb-6">
-                        <p class="text-indigo-400 text-xs font-bold uppercase tracking-widest">חלום שנותר להגשים</p>
-                        <h3 id="rem-budget" class="text-5xl font-black text-white mt-2 drop-shadow-lg">₪0</h3>
+                        <p class="text-indigo-400 text-xs font-bold uppercase tracking-widest text-center">חלום שנותר להגשים</p>
+                        <h3 id="rem-budget" class="text-5xl font-black text-white mt-2 drop-shadow-lg text-center">₪0</h3>
                     </div>
                     
                     <div class="relative w-full aspect-square max-w-[280px] mb-8">
@@ -60,7 +59,7 @@
                     </div>
 
                     <div class="w-full space-y-4">
-                        <div class="bg-white/5 border border-white/10 p-5 rounded-3xl hover:bg-white/10 transition">
+                        <div class="bg-white/5 border border-white/10 p-5 rounded-3xl">
                             <p class="text-gray-400 text-[10px] uppercase font-bold mb-1 text-right italic">יעד תקציבי כולל</p>
                             <div class="flex gap-2">
                                 <input id="total-target" type="number" class="bg-transparent text-2xl font-black w-full outline-none text-white text-right" placeholder="הזן תקציב">
@@ -78,7 +77,7 @@
     </div>
 
     <script>
-        const API = "https://weddingplannerapp-i54n.onrender.com";
+        const API = "https://wedding-elad-planner.onrender.com"; // וודא שזה ה-URL המדויק שלך
         let myChart;
         let localData = { spent: 0, total: 0 };
         
@@ -99,11 +98,11 @@
                     <div class="glass-card p-6 shadow-sm mb-4 border-r-4 border-indigo-400">
                         <div class="flex justify-between items-center cursor-pointer" onclick="toggleDropdown('${id}')">
                             <div class="flex items-center gap-4"><span class="text-2xl">${c.icon}</span><span class="text-xl font-bold text-slate-700">${c.name}</span></div>
-                            <span class="text-gray-400 text-xs">לחץ לפירוט ▼</span>
+                            <span class="text-gray-400 text-xs">פירוט ▼</span>
                         </div>
                         <div id="${id}" class="dropdown-content mt-4 space-y-4 pt-4 border-t border-gray-100">
                             ${c.items.map(item => `
-                                <div class="bg-gray-50/50 p-4 rounded-2xl flex flex-col gap-2 border border-white/50">
+                                <div class="bg-gray-50/50 p-4 rounded-2xl flex flex-col gap-2">
                                     <div class="flex justify-between items-center">
                                         <span class="font-bold text-slate-600 text-sm">${item}</span>
                                         <div class="flex gap-2 items-center">
@@ -111,7 +110,7 @@
                                             <button onclick="saveExp('${item}', 'in-${item}', 'note-${item}')" class="bg-emerald-500 text-white px-3 py-1 rounded-lg text-xs font-bold shadow-md btn-update">עדכן 💾</button>
                                         </div>
                                     </div>
-                                    <input id="note-${item}" type="text" placeholder="הערה לסעיף זה (למשל: סגרנו חוזה)" class="text-[11px] bg-transparent border-b border-gray-200 outline-none w-full text-slate-400 italic">
+                                    <input id="note-${item}" type="text" placeholder="הערה..." class="text-[11px] bg-transparent border-b border-gray-200 outline-none w-full text-slate-400 italic">
                                 </div>`).join('')}
                         </div>
                     </div>`;
@@ -121,10 +120,6 @@
         async function saveExp(cat, inputId, noteId) {
             const amount = parseFloat(document.getElementById(inputId).value) || 0;
             const note = document.getElementById(noteId).value;
-            // Optimistic UI
-            localData.spent += amount;
-            updateUI();
-            
             await fetch(`${API}/budget/add`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -145,7 +140,8 @@
             try {
                 const res = await fetch(`${API}/budget/summary`);
                 const data = await res.json();
-                localData = data;
+                localData.total = data.total;
+                localData.spent = data.spent;
                 updateUI();
             } catch (e) { console.error("Sync Error"); }
         }
@@ -171,11 +167,7 @@
             myChart = new Chart(ctx, {
                 type: 'doughnut',
                 data: { datasets: [{ data: [s, rem], backgroundColor: ['#4f46e5', 'rgba(255,255,255,0.05)'], borderWidth: 0 }] },
-                options: { 
-                    cutout: '82%', 
-                    plugins: { legend: { display: false } }, 
-                    animation: { duration: 1500, easing: 'easeOutQuart' } 
-                }
+                options: { cutout: '82%', plugins: { legend: { display: false } }, animation: { duration: 1000 } }
             });
         }
 
