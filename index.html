@@ -3,71 +3,73 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Wedding Elite Pro | Dashboard</title>
+    <title>Wedding Elite Pro | Live Dashboard</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Assistant:wght@300;400;700&display=swap" rel="stylesheet">
     <style>
         body { 
             font-family: 'Assistant', sans-serif; 
-            background: linear-gradient(rgba(255, 255, 255, 0.75), rgba(255, 255, 255, 0.75)), 
+            background: linear-gradient(rgba(255, 255, 255, 0.7), rgba(255, 255, 255, 0.7)), 
                         url('https://images.unsplash.com/photo-1519741497674-611481863552?ixlib=rb-4.0.3&auto=format&fit=crop&w=1920&q=80');
             background-size: cover; background-position: center; background-attachment: fixed; min-height: 100vh;
         }
-        .glass-card { background: rgba(255, 255, 255, 0.9); backdrop-filter: blur(12px); border-radius: 24px; border: 1px solid rgba(255,255,255,0.3); box-shadow: 0 10px 40px rgba(0,0,0,0.05); }
-        .dark-card { background: #1e293b; color: white; border-radius: 24px; box-shadow: 0 20px 50px rgba(0,0,0,0.2); }
+        .glass-card { background: rgba(255, 255, 255, 0.85); backdrop-filter: blur(12px); border-radius: 24px; border: 1px solid rgba(255,255,255,0.3); box-shadow: 0 10px 40px rgba(0,0,0,0.05); }
+        .dark-card { background: #1e293b; color: white; border-radius: 24px; }
         .dropdown-content { display: none; }
         .dropdown-content.active { display: block; animation: fadeIn 0.3s ease; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
+        .countdown-unit { background: rgba(79, 70, 229, 0.1); border-radius: 12px; padding: 10px; min-width: 70px; text-align: center; }
     </style>
 </head>
 <body class="p-4 md:p-8">
     <div class="max-w-6xl mx-auto">
-        <div class="flex justify-between items-center mb-10 bg-white/50 p-4 rounded-2xl backdrop-blur-sm">
-            <div>
-                <p class="text-gray-500 text-sm font-bold tracking-widest uppercase">Producer</p>
-                <h1 class="text-2xl font-black text-slate-800">אלעד סויסה</h1>
+        
+        <div class="flex justify-between items-center mb-6 bg-white/40 p-4 rounded-2xl">
+            <h1 class="text-xl font-black text-slate-800">WeddingElite <span class="text-indigo-600">Pro</span></h1>
+            <button onclick="toggleDropdown('settings-panel')" class="text-2xl">⚙️</button>
+        </div>
+
+        <div id="settings-panel" class="dropdown-content glass-card p-6 mb-8 border-2 border-indigo-200">
+            <h4 class="font-bold mb-4 text-slate-700">הגדרות אירוע</h4>
+            <div class="flex flex-wrap gap-4 items-end">
+                <div>
+                    <label class="block text-xs text-slate-500 mb-1">תאריך ושעה של החתונה:</label>
+                    <input id="wedding-date-input" type="datetime-local" class="border rounded-lg p-2 focus:ring-2 focus:ring-indigo-500 outline-none">
+                </div>
+                <button onclick="saveWeddingDate()" class="bg-indigo-600 text-white px-6 py-2 rounded-lg font-bold hover:bg-indigo-700 transition">עדכן תאריך</button>
             </div>
-            <div class="flex items-center gap-2">
-                <span class="font-bold text-indigo-900 italic text-xl">WeddingElite</span>
-                <div class="w-10 h-10 bg-indigo-600 text-white rounded-xl flex items-center justify-center font-bold shadow-lg">W</div>
+        </div>
+
+        <div class="glass-card mb-8 p-6 flex flex-col md:flex-row justify-between items-center gap-6 border-b-4 border-indigo-600">
+            <div>
+                <h4 class="text-indigo-900 font-bold text-lg">הספירה לאחור...</h4>
+                <p id="wedding-status-text" class="text-slate-500 text-sm">מחשב זמן שנותר לרגע הגדול</p>
+            </div>
+            <div id="countdown" class="flex gap-3 text-indigo-600 font-black text-2xl">
+                <div class="countdown-unit"><span id="days">00</span><p class="text-[10px] text-slate-400">ימים</p></div>
+                <div class="countdown-unit"><span id="hours">00</span><p class="text-[10px] text-slate-400">שעות</p></div>
+                <div class="countdown-unit"><span id="minutes">00</span><p class="text-[10px] text-slate-400">דקות</p></div>
+                <div class="countdown-unit"><span id="seconds">00</span><p class="text-[10px] text-slate-400">שניות</p></div>
             </div>
         </div>
 
         <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
             <div class="lg:col-span-7 space-y-4">
-                <div class="mb-8 p-2">
-                    <h2 class="text-5xl font-black text-slate-800 leading-tight">ניהול <span class="text-indigo-600 italic">התקציב.</span></h2>
-                    <p class="text-slate-600 mt-2 font-medium">כאן מתחיל הסיפור שלכם. שקל אחרי שקל.</p>
-                </div>
-
-                <div id="categories-container" class="space-y-4">
-                    </div>
+                <div id="categories-container" class="space-y-4"></div>
             </div>
 
             <div class="lg:col-span-5">
                 <div class="dark-card p-8 sticky top-8">
-                    <div class="mb-8 text-center lg:text-right">
-                        <p class="text-slate-400 text-sm font-bold">יתרה שנותרה לניצול</p>
+                    <div class="mb-8 text-center">
+                        <p class="text-slate-400 text-sm font-bold uppercase tracking-widest">יתרה שנותרה</p>
                         <h3 id="remaining-budget" class="text-5xl font-black text-indigo-400 mt-1">₪0</h3>
                     </div>
-
-                    <div class="relative h-64 mb-8">
+                    <div class="relative h-64">
                         <canvas id="budgetChart"></canvas>
                         <div class="absolute inset-0 flex flex-col items-center justify-center">
                             <span id="percent-used" class="text-4xl font-black text-white">0%</span>
-                            <span class="text-slate-400 text-xs font-bold uppercase tracking-widest mt-1">ניצול תקציב</span>
-                        </div>
-                    </div>
-
-                    <div class="grid grid-cols-2 gap-4">
-                        <div class="bg-slate-800/50 border border-slate-700 p-4 rounded-2xl text-center">
-                            <p class="text-slate-400 text-xs mb-1">כיסוי ממוצע</p>
-                            <p id="cost-per-guest" class="text-xl font-bold text-white">₪0</p>
-                        </div>
-                        <div class="bg-slate-800/50 border border-slate-700 p-4 rounded-2xl text-center">
-                            <p class="text-slate-400 text-xs mb-1">מוזמנים</p>
-                            <p class="text-xl font-bold text-indigo-400">400</p>
+                            <span class="text-slate-400 text-[10px] font-bold uppercase tracking-widest">ניצול תקציב</span>
                         </div>
                     </div>
                 </div>
@@ -79,78 +81,99 @@
         const API_URL = "https://weddingplannerapp-i54n.onrender.com";
         let chart;
 
+        // Initialize Wedding Date from Storage or Default
+        let weddingTimestamp = localStorage.getItem('wedding_date') || new Date("2026-05-20T19:30:00").getTime();
+        document.getElementById('wedding-date-input').value = new Date(parseInt(weddingTimestamp)).toISOString().slice(0, 16);
+
+        function saveWeddingDate() {
+            const val = document.getElementById('wedding-date-input').value;
+            if (!val) return;
+            const newTs = new Date(val).getTime();
+            localStorage.setItem('wedding_date', newTs);
+            weddingTimestamp = newTs;
+            alert("התאריך נשמר!");
+            toggleDropdown('settings-panel');
+        }
+
+        function updateCountdown() {
+            const now = new Date().getTime();
+            const diff = weddingTimestamp - now;
+            if (diff > 0) {
+                document.getElementById('days').innerText = String(Math.floor(diff / (1000 * 60 * 60 * 24))).padStart(2, '0');
+                document.getElementById('hours').innerText = String(Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60))).padStart(2, '0');
+                document.getElementById('minutes').innerText = String(Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60))).padStart(2, '0');
+                document.getElementById('seconds').innerText = String(Math.floor((diff % (1000 * 60)) / 1000)).padStart(2, '0');
+            } else {
+                document.getElementById('wedding-status-text').innerText = "יום החתונה הגיע! מזל טוב!";
+            }
+        }
+        setInterval(updateCountdown, 1000);
+
+        // Core App Logic
         const categories = [
-            { name: 'אולם וקייטרינג', icon: '🏛️', sub: ['אולם', 'בר אלכוהול', 'עיצוב אירוע'] },
-            { name: 'מוזיקה ובידור', icon: '🎵', sub: ['DJ', 'תאורה והגברה', 'אטרקציות'] },
-            { name: 'צילום ומזכרות', icon: '📸', sub: ['צוות צילום', 'מגנטים', 'וידאו'] },
-            { name: 'ביוטי וסטייל', icon: '💎', sub: ['שמלת כלה', 'חליפת חתן', 'איפור ושיער'] }
+            { name: 'אולם וקייטרינג', icon: '🏛️', sub: ['אולם', 'בר'] },
+            { name: 'מוזיקה וצילום', icon: '🎵', sub: ['DJ', 'צילום', 'מגנטים'] }
         ];
 
         function renderCategories() {
             const container = document.getElementById('categories-container');
             categories.forEach((cat, i) => {
                 const id = `cat-${i}`;
-                const html = `
+                container.innerHTML += `
                     <div class="glass-card p-6">
                         <div class="flex justify-between items-center cursor-pointer" onclick="toggleDropdown('${id}')">
                             <div class="flex items-center gap-4"><span class="text-2xl">${cat.icon}</span><span class="text-xl font-bold text-slate-700">${cat.name}</span></div>
                             <span class="text-indigo-400">▼</span>
                         </div>
-                        <div id="${id}" class="dropdown-content mt-4 pt-4 border-t border-indigo-50 space-y-4">
-                            ${cat.sub.map(subCat => `
-                                <div class="flex justify-between items-center bg-white/40 p-2 rounded-xl">
-                                    <span class="font-medium text-slate-600">${subCat}</span>
+                        <div id="${id}" class="dropdown-content mt-4 pt-4 border-t border-indigo-50 space-y-3">
+                            ${cat.sub.map(s => `
+                                <div class="flex justify-between items-center">
+                                    <span class="text-slate-600 font-medium">${s}</span>
                                     <div class="flex gap-2">
-                                        <input id="in-${subCat}" type="number" class="w-24 border-none bg-white rounded-lg p-1 shadow-inner text-center" placeholder="₪">
-                                        <button onclick="saveExpense('${subCat}', 'in-${subCat}')" class="bg-green-500 hover:bg-green-600 text-white p-2 rounded-lg shadow-sm transition">💾</button>
-                                        <button onclick="deleteExpense('${subCat}')" class="bg-rose-100 hover:bg-rose-200 text-rose-600 p-2 rounded-lg transition">🗑️</button>
+                                        <input id="in-${s}" type="number" class="w-20 border rounded p-1 text-center" placeholder="₪">
+                                        <button onclick="saveExpense('${s}', 'in-${s}')" class="bg-green-500 text-white p-1.5 rounded-lg shadow-sm">💾</button>
+                                        <button onclick="deleteExpense('${s}')" class="bg-rose-100 text-rose-600 p-1.5 rounded-lg">🗑️</button>
                                     </div>
                                 </div>
                             `).join('')}
                         </div>
                     </div>`;
-                container.innerHTML += html;
             });
         }
 
         function toggleDropdown(id) { document.getElementById(id).classList.toggle('active'); }
-
+        
         async function fetchStats() {
             try {
-                const response = await fetch(`${API_URL}/budget/summary`);
-                const data = await response.json();
+                const res = await fetch(`${API_URL}/budget/summary`);
+                const data = await res.json();
                 document.getElementById('remaining-budget').innerText = `₪${data.remaining.toLocaleString()}`;
-                const percent = data.total > 0 ? Math.round((data.spent / data.total) * 100) : 0;
-                document.getElementById('percent-used').innerText = `${percent}%`;
-                document.getElementById('cost-per-guest').innerText = `₪${Math.round(data.spent / 400)}`;
+                const p = data.total > 0 ? Math.round((data.spent / data.total) * 100) : 0;
+                document.getElementById('percent-used').innerText = `${p}%`;
                 updateChart(data.spent, data.remaining);
-            } catch (e) { console.error("Error:", e); }
+            } catch (e) { console.error(e); }
         }
 
-        async function saveExpense(category, inputId) {
-            const amount = document.getElementById(inputId).value;
-            if (!amount) return alert("נא להזין סכום");
-            try {
-                const res = await fetch(`${API_URL}/expenses`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ category, amount: parseFloat(amount), notes: "Updated via UI" })
-                });
-                if (res.ok) { fetchStats(); alert("נשמר בהצלחה!"); }
-            } catch (e) { alert("שגיאה בתקשורת עם השרת"); }
+        async function saveExpense(category, id) {
+            const amount = document.getElementById(id).value;
+            if (!amount) return;
+            const res = await fetch(`${API_URL}/expenses`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ category, amount: parseFloat(amount), notes: "Update" })
+            });
+            if (res.ok) { fetchStats(); alert("נשמר!"); }
         }
 
         async function deleteExpense(category) {
-            if (!confirm(`האם אתה בטוח שברצונך למחוק את ההוצאה ל-${category}?`)) return;
-            try {
-                // שים לב: אנחנו שולחים סכום 0 כדי "לאפס" את הקטגוריה ב-Backend הפשוט שלנו
-                const res = await fetch(`${API_URL}/expenses`, {
+            if (confirm("לאפס הוצאה?")) {
+                await fetch(`${API_URL}/expenses`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ category, amount: 0, notes: "Deleted" })
+                    body: JSON.stringify({ category, amount: 0, notes: "Reset" })
                 });
-                if (res.ok) { fetchStats(); alert("הסעיף אופס"); }
-            } catch (e) { alert("שגיאה במחיקה"); }
+                fetchStats();
+            }
         }
 
         function updateChart(spent, remaining) {
