@@ -1,15 +1,12 @@
-from fastapi import FastAPI, Depends
+from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from sqlalchemy.orm import Session
 from pydantic import BaseModel
-import models
-import database
-from database import engine, SessionLocal
-
-models.Base.metadata.create_all(bind=engine)
+import sqlite3
+from typing import Optional, List
 
 app = FastAPI()
 
+# אפשור CORS כדי שה-Frontend יוכל לדבר עם ה-Backend
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -17,56 +14,110 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-def get_db():
-    db = SessionLocal()
-    try:
-        yield db
-    finally:
-        db.close()
+# חיבור ל-DB ויצירת טבלאות
+def init_db():
+    conn = sqlite3.connect("wedding.db")
+    cursor = conn.cursor()
+    # טבלת תקציב
+    cursor.execute("""
+        CREATE TABLE IF NOT EXISTS budget (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            category TEXT UNIQUE,
+            amount REAL,
+            notes TEXT
+        )
+    """)
+    # טבלת הגדרות כלליות (תקציב יעד)
+    cursor.execute("CREATE TABLE IF NOT EXISTS settings (key TEXT PRIMARY KEY, value REAL)")
+    
+    # --- טבלת אורחים חדשה ---
+    cursor.execute("""
+        CREATE TABLE IF NOT EXISTS guests (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            name TEXT,
+            count INTEGER,
+            status TEXT, -- 'confirmed', 'maybe', 'declined'
+            side TEXT    -- 'groom', 'bride'
+        )
+    """)
+    conn.commit()
+    conn.close()
 
-class ExpenseCreate(BaseModel):
+init_db()
+
+# מודלים של נתונים
+class BudgetItem(BaseModel):
     category: str
     amount: float
-    notes: str = ""
+    notes: Optional[str] = ""
+
+class Guest(BaseModel):
+    name: str
+    count: int
+    status: str
+    side: str
+
+# --- Endpoints לתקציב ---
+@app.post("/budget/add")
+def add_budget(item: BudgetItem):
+    conn = sqlite3.connect("wedding.db")
+    cursor = conn.cursor()
+    cursor.execute("INSERT OR REPLACE INTO budget (category, amount, notes) VALUES (?, ?, ?)",
+                   (item.category, item.amount, item.notes))
+    conn.commit()
+    conn.close()
+    return {"message": "Success"}
 
 @app.get("/budget/summary")
-def get_summary(db: Session = Depends(get_db)):
-    expenses = db.query(models.Expense).all()
-    budget_record = db.query(models.Budget).first()
-    
-    # אם אין תקציב ב-DB, ניצור אחד ריק ולא ננחש סכום
-    if not budget_record:
-        budget_record = models.Budget(total_amount=0)
-        db.add(budget_record)
-        db.commit()
-        db.refresh(budget_record)
-    
-    total = budget_record.total_amount
-    spent = sum(e.amount for e in expenses)
-    return {
-        "total": total,
-        "spent": spent,
-        "remaining": total - spent
-    }
+def get_summary():
+    conn = sqlite3.connect("wedding.db")
+    cursor = conn.cursor()
+    cursor.execute("SELECT SUM(amount) FROM budget")
+    spent = cursor.fetchone()[0] or 0
+    cursor.execute("SELECT value FROM settings WHERE key='total_budget'")
+    total = cursor.fetchone()
+    total = total[0] if total else 0
+    conn.close()
+    return {"spent": spent, "total": total}
 
 @app.post("/budget/update_total")
-def update_total(amount: float, db: Session = Depends(get_db)):
-    budget_record = db.query(models.Budget).first()
-    if budget_record:
-        budget_record.total_amount = amount
-    else:
-        budget_record = models.Budget(total_amount=amount)
-        db.add(budget_record)
-    db.commit()
-    return {"status": "success"}
+def update_total(amount: float):
+    conn = sqlite3.connect("wedding.db")
+    cursor = conn.cursor()
+    cursor.execute("INSERT OR REPLACE INTO settings (key, value) VALUES ('total_budget', ?)", (amount,))
+    conn.commit()
+    conn.close()
+    return {"message": "Total updated"}
 
-@app.post("/budget/add")
-def add_expense(expense: ExpenseCreate, db: Session = Depends(get_db)):
-    existing = db.query(models.Expense).filter(models.Expense.category == expense.category).first()
-    if existing:
-        existing.amount = expense.amount
-        existing.notes = expense.notes
-    else:
-        db.add(models.Expense(category=expense.category, amount=expense.amount, notes=expense.notes))
-    db.commit()
-    return {"status": "success"}
+# --- Endpoints חדשים לאורחים ---
+@app.get("/guests")
+def get_guests():
+    conn = sqlite3.connect("wedding.db")
+    cursor = conn.cursor()
+    cursor.execute("SELECT id, name, count, status, side FROM guests")
+    rows = cursor.fetchall()
+    conn.close()
+    return [{"id": r[0], "name": r[1], "count": r[2], "status": r[3], "side": r[4]} for r in rows]
+
+@app.post("/guests/add")
+def add_guest(guest: Guest):
+    conn = sqlite3.connect("wedding.db")
+    cursor = conn.cursor()
+    cursor.execute("INSERT INTO guests (name, count, status, side) VALUES (?, ?, ?, ?)",
+                   (guest.name, guest.count, guest.status, guest.side))
+    conn.commit()
+    conn.close()
+    return {"message": "Guest added"}
+
+@app.delete("/guests/{guest_id}")
+def delete_guest(guest_id: int):
+    conn = sqlite3.connect("wedding.db")
+    cursor = conn.cursor()
+    cursor.execute("DELETE FROM guests WHERE id = ?", (guest_id,))
+    conn.commit()
+    conn.close()
+    return {"message": "Guest deleted"}
+
+if __name__ == "__main__":
+    import uvicorn
+    uvicorn.run(app, host="0.0.0.0", port=8000)
