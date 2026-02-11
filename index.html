@@ -4,13 +4,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <meta name="theme-color" content="#6366F1">
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <title>Wedding Elite | החתונה שלכם, בשליטה מלאה</title>
+    <title>Wedding Elite V2.0 | האפליקציה לניהול חתונות</title>
     
     <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
     <link href="https://fonts.googleapis.com/css2?family=Assistant:wght@400;600;700;800&display=swap" rel="stylesheet">
     
     <style>
@@ -23,15 +19,7 @@
             user-select: none;
         }
         
-        /* Smooth Transitions */
-        .smooth { transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
-        .smooth-fast { transition: all 0.15s ease-out; }
-        
-        /* Tab System */
-        .tab-content { 
-            display: none;
-            animation: fadeIn 0.3s ease-out;
-        }
+        .tab-content { display: none; animation: fadeIn 0.3s ease-out; }
         .tab-content.active { display: block; }
         
         @keyframes fadeIn {
@@ -39,7 +27,6 @@
             to { opacity: 1; transform: translateY(0); }
         }
         
-        /* Card Styles */
         .card {
             background: white;
             border-radius: 24px;
@@ -47,94 +34,39 @@
             border: 1px solid #F1F5F9;
             transition: all 0.3s ease;
         }
-        .card:active {
-            transform: scale(0.98);
-            box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08);
-        }
         
-        /* Button Styles */
         .btn-primary {
             background: linear-gradient(135deg, #6366F1, #8B5CF6);
             box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
             transition: all 0.3s ease;
         }
-        .btn-primary:active {
-            transform: translateY(-2px);
-            box-shadow: 0 6px 20px rgba(99, 102, 241, 0.4);
+        
+        .editable {
+            cursor: pointer;
+            padding: 4px 8px;
+            border-radius: 8px;
+            transition: background 0.2s;
+        }
+        .editable:hover {
+            background: #F1F5F9;
         }
         
-        /* Bottom Navigation */
-        .nav-item {
-            transition: all 0.2s ease;
-            color: #94A3B8;
-        }
-        .nav-item.active {
-            color: #6366F1;
-        }
-        .nav-item.active .nav-bg {
-            background: #EEF2FF;
-        }
-        
-        /* Progress Ring */
-        .progress-ring {
-            transform: rotate(-90deg);
-        }
-        
-        /* Input Focus */
-        .input-field {
-            background: #F8FAFC;
-            border: 2px solid #E2E8F0;
-            transition: all 0.2s ease;
-        }
-        .input-field:focus {
-            outline: none;
-            border-color: #6366F1;
-            background: white;
-            box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.1);
-        }
-        
-        /* Skeleton Loading */
-        .skeleton {
-            background: linear-gradient(90deg, #F1F5F9 25%, #E2E8F0 50%, #F1F5F9 75%);
-            background-size: 200% 100%;
-            animation: shimmer 1.5s infinite;
-        }
-        @keyframes shimmer {
-            0% { background-position: 200% 0; }
-            100% { background-position: -200% 0; }
-        }
-        
-        /* Success Animation */
-        @keyframes successPulse {
-            0%, 100% { transform: scale(1); }
-            50% { transform: scale(1.05); }
-        }
-        .success-pulse {
-            animation: successPulse 0.6s ease;
-        }
-        
-        /* Floating Action Button */
-        .fab {
+        .modal {
+            display: none;
             position: fixed;
-            bottom: 90px;
-            left: 20px;
-            width: 64px;
-            height: 64px;
-            border-radius: 50%;
-            background: linear-gradient(135deg, #6366F1, #8B5CF6);
-            box-shadow: 0 8px 16px rgba(99, 102, 241, 0.4);
-            display: flex;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.5);
+            z-index: 1000;
             align-items: center;
             justify-content: center;
-            font-size: 28px;
-            z-index: 50;
-            transition: all 0.3s ease;
         }
-        .fab:active {
-            transform: scale(0.9);
+        .modal.show {
+            display: flex;
         }
         
-        /* Toast Notification */
         .toast {
             position: fixed;
             top: 20px;
@@ -147,25 +79,11 @@
             transform: translateY(-100px);
             opacity: 0;
             transition: all 0.3s ease;
-            z-index: 100;
+            z-index: 2000;
         }
         .toast.show {
             transform: translateY(0);
             opacity: 1;
-        }
-        
-        /* Empty State */
-        .empty-state {
-            text-align: center;
-            padding: 60px 20px;
-            color: #64748B;
-        }
-        
-        /* Countdown Ring */
-        .countdown-ring {
-            width: 180px;
-            height: 180px;
-            margin: 0 auto;
         }
     </style>
 </head>
@@ -175,9 +93,15 @@
     <div id="toast" class="toast">
         <div class="flex items-center gap-3">
             <span id="toast-icon" class="text-2xl">✅</span>
-            <div class="flex-1">
-                <p id="toast-message" class="font-bold text-slate-800"></p>
-            </div>
+            <p id="toast-message" class="font-bold text-slate-800"></p>
+        </div>
+    </div>
+
+    <!-- Modal for Edit/Add -->
+    <div id="modal" class="modal">
+        <div class="bg-white rounded-3xl p-6 max-w-md w-full mx-4" onclick="event.stopPropagation()">
+            <h3 id="modal-title" class="text-xl font-bold mb-4"></h3>
+            <div id="modal-content"></div>
         </div>
     </div>
 
@@ -190,8 +114,10 @@
             <!-- Header -->
             <div class="bg-white p-6 flex items-center justify-between sticky top-0 z-10 shadow-sm">
                 <div>
-                    <h1 class="text-2xl font-bold text-slate-800">שלום <span id="user-name">חן</span>! 💕</h1>
-                    <p class="text-sm text-slate-500">בואו נראה איפה אנחנו היום</p>
+                    <h1 class="text-2xl font-bold text-slate-800">
+                        שלום <span id="display-names" class="editable" onclick="editNames()">חן ויוסי</span>! 💕
+                    </h1>
+                    <p class="text-sm text-slate-500">לחצו על השמות לעריכה</p>
                 </div>
                 <button class="w-12 h-12 rounded-full bg-slate-100 flex items-center justify-center text-xl">
                     🔔
@@ -200,23 +126,15 @@
 
             <div class="p-4 space-y-4">
                 
-                <!-- Countdown Card -->
+                <!-- Countdown Card (EDITABLE) -->
                 <div class="card p-8 text-center bg-gradient-to-br from-indigo-600 to-purple-600 text-white">
-                    <p class="text-indigo-200 text-sm font-bold uppercase mb-2">הספירה לאחור מתחילה!</p>
-                    <div class="countdown-ring mx-auto mb-4">
-                        <svg width="180" height="180">
-                            <circle cx="90" cy="90" r="70" stroke="#E0E7FF" stroke-width="8" fill="none" opacity="0.3"/>
-                            <circle id="countdown-progress" class="progress-ring" cx="90" cy="90" r="70" 
-                                    stroke="#FFFFFF" stroke-width="8" fill="none"
-                                    stroke-dasharray="440" stroke-dashoffset="0"
-                                    stroke-linecap="round"/>
-                        </svg>
-                        <div style="position: relative; top: -130px;">
-                            <h2 id="days-left" class="text-6xl font-black">247</h2>
-                            <p class="text-lg">ימים לחתונה</p>
-                        </div>
-                    </div>
-                    <p class="text-white/90 mt-4">🎊 15 באוגוסט 2026</p>
+                    <p class="text-indigo-200 text-sm font-bold uppercase mb-2">הספירה לאחור!</p>
+                    <h2 id="days-left" class="text-6xl font-black my-4">247</h2>
+                    <p class="text-lg">ימים לחתונה</p>
+                    <p id="display-date" class="text-white/90 mt-4 editable" onclick="editDate()">
+                        📅 15 באוגוסט 2026
+                    </p>
+                    <p class="text-xs text-white/70 mt-1">לחצו לשינוי תאריך</p>
                 </div>
 
                 <!-- Control Meter -->
@@ -228,7 +146,7 @@
                     
                     <div class="relative mb-6">
                         <div class="h-3 bg-slate-100 rounded-full overflow-hidden">
-                            <div id="control-bar" class="h-full bg-gradient-to-r from-green-400 to-green-500 smooth" style="width: 78%"></div>
+                            <div id="control-bar" class="h-full bg-gradient-to-r from-green-400 to-green-500" style="width: 78%"></div>
                         </div>
                         <div class="flex justify-between mt-2 text-xs text-slate-500">
                             <span>0%</span>
@@ -255,70 +173,42 @@
 
                 <!-- Today's Tasks -->
                 <div class="card p-6">
-                    <h3 class="text-lg font-bold text-slate-800 mb-4">⚡ לעשות היום</h3>
+                    <div class="flex items-center justify-between mb-4">
+                        <h3 class="text-lg font-bold text-slate-800">⚡ משימות להיום</h3>
+                        <button onclick="addTask()" class="text-indigo-600 text-sm font-bold">+ הוסף</button>
+                    </div>
                     
                     <div id="today-tasks-list" class="space-y-3">
-                        <!-- Task Item -->
-                        <div class="flex items-start gap-3 p-3 bg-slate-50 rounded-2xl smooth hover:bg-slate-100">
-                            <input type="checkbox" class="mt-1 w-5 h-5 accent-indigo-600">
-                            <div class="flex-1">
-                                <p class="font-semibold text-slate-800">לשלם מקדמה לצלם</p>
-                                <p class="text-sm text-slate-500">₪5,000 • 📅 זה אמור היה להיות שבוע שעבר</p>
-                            </div>
-                            <button class="btn-primary text-white px-4 py-2 rounded-xl text-sm font-bold">שלם</button>
-                        </div>
-
-                        <div class="flex items-start gap-3 p-3 bg-slate-50 rounded-2xl smooth hover:bg-slate-100">
-                            <input type="checkbox" class="mt-1 w-5 h-5 accent-indigo-600">
-                            <div class="flex-1">
-                                <p class="font-semibold text-slate-800">לאשר תפריט עם הקייטרינג</p>
-                                <p class="text-sm text-slate-500">📞 התקשר עד סוף השבוע</p>
-                            </div>
-                            <button class="bg-white border-2 border-slate-200 text-slate-700 px-4 py-2 rounded-xl text-sm font-bold smooth hover:border-indigo-300">התקשר</button>
-                        </div>
-
-                        <div class="flex items-start gap-3 p-3 bg-slate-50 rounded-2xl smooth hover:bg-slate-100">
-                            <input type="checkbox" class="mt-1 w-5 h-5 accent-indigo-600">
-                            <div class="flex-1">
-                                <p class="font-semibold text-slate-800">לשלוח הזמנות</p>
-                                <p class="text-sm text-orange-500">⚠️ רק 14 ימים נשארו!</p>
-                            </div>
-                            <button class="bg-white border-2 border-slate-200 text-slate-700 px-4 py-2 rounded-xl text-sm font-bold smooth hover:border-indigo-300">צור</button>
-                        </div>
+                        <!-- Tasks loaded dynamically -->
                     </div>
-
-                    <button class="mt-4 w-full text-center text-indigo-600 font-semibold text-sm">
-                        ראה את כל המשימות →
-                    </button>
                 </div>
 
-                <!-- Budget Quick View -->
+                <!-- Budget Quick View (EDITABLE) -->
                 <div class="card p-6">
-                    <h3 class="text-lg font-bold text-slate-800 mb-4">💰 תמונת התקציב</h3>
+                    <div class="flex items-center justify-between mb-4">
+                        <h3 class="text-lg font-bold text-slate-800">💰 תקציב</h3>
+                        <button onclick="switchTab('budget')" class="text-indigo-600 text-sm font-bold">פירוט →</button>
+                    </div>
                     
                     <div class="space-y-2 mb-4">
                         <div class="flex justify-between items-center">
-                            <span class="text-slate-600">תוכנן:</span>
-                            <span class="font-bold text-slate-800" id="budget-planned">₪165,000</span>
+                            <span class="text-slate-600">תקציב:</span>
+                            <span id="budget-total" class="font-bold text-slate-800 editable" onclick="editBudget()">₪165,000</span>
                         </div>
                         <div class="flex justify-between items-center">
-                            <span class="text-slate-600">בפועל:</span>
-                            <span class="font-bold text-slate-800" id="budget-actual">₪148,500</span>
+                            <span class="text-slate-600">הוצאות:</span>
+                            <span id="budget-actual" class="font-bold text-slate-800">₪148,500</span>
                         </div>
                         <div class="h-px bg-slate-200"></div>
                         <div class="flex justify-between items-center">
                             <span class="text-slate-600">נשאר:</span>
-                            <span class="font-bold text-green-600" id="budget-remaining">₪16,500 🎉</span>
+                            <span id="budget-remaining" class="font-bold text-green-600">₪16,500 🎉</span>
                         </div>
                     </div>
 
-                    <div class="h-3 bg-slate-100 rounded-full overflow-hidden mb-3">
+                    <div class="h-3 bg-slate-100 rounded-full overflow-hidden">
                         <div id="budget-bar" class="h-full bg-gradient-to-r from-indigo-500 to-purple-500" style="width: 90%"></div>
                     </div>
-
-                    <button onclick="switchTab('budget')" class="w-full text-center text-indigo-600 font-semibold text-sm">
-                        ראה פירוט מלא →
-                    </button>
                 </div>
 
             </div>
@@ -327,10 +217,9 @@
         <!-- ==================== BUDGET TAB ==================== -->
         <div id="tab-budget" class="tab-content">
             
-            <!-- Header -->
             <div class="bg-white p-6 sticky top-0 z-10 shadow-sm">
                 <h1 class="text-2xl font-bold text-slate-800">💰 תקציב</h1>
-                <p class="text-sm text-slate-500">עקוב אחרי ההוצאות בזמן אמת</p>
+                <p class="text-sm text-slate-500">לחצו על כל פריט לעריכה</p>
             </div>
 
             <div class="p-4 space-y-4">
@@ -338,8 +227,9 @@
                 <!-- Budget Summary -->
                 <div class="card p-6 bg-gradient-to-br from-slate-900 to-slate-800 text-white">
                     <p class="text-slate-400 text-xs font-bold uppercase mb-2">תקציב כולל</p>
-                    <h2 class="text-5xl font-black mb-1">₪165,000</h2>
-                    <div class="flex items-center gap-2 mt-4">
+                    <h2 class="text-5xl font-black mb-1 editable" onclick="editBudget()">₪165,000</h2>
+                    <p class="text-xs text-slate-400 mb-4">לחצו לעריכה</p>
+                    <div class="flex items-center gap-2">
                         <div class="flex-1">
                             <p class="text-xs text-slate-400">הוצאות</p>
                             <p class="text-xl font-bold">₪148,500</p>
@@ -352,96 +242,67 @@
                 </div>
 
                 <!-- Categories -->
-                <div class="space-y-3">
-                    
-                    <!-- Category: Venue -->
-                    <div class="card p-5" onclick="toggleCategory('venue')">
-                        <div class="flex items-center justify-between">
-                            <div class="flex items-center gap-3">
-                                <span class="text-3xl">🏛️</span>
-                                <div>
-                                    <h4 class="font-bold text-slate-800">אולם ואירוח</h4>
-                                    <p class="text-sm text-slate-500">₪85,000 מתוך ₪90,000</p>
-                                </div>
-                            </div>
-                            <div class="text-left">
-                                <p class="text-sm font-bold text-green-600">-₪5K ✅</p>
-                                <p class="text-xs text-slate-400">94%</p>
-                            </div>
-                        </div>
-                        <div class="h-2 bg-slate-100 rounded-full overflow-hidden mt-3">
-                            <div class="h-full bg-green-500" style="width: 94%"></div>
-                        </div>
-                    </div>
-
-                    <!-- Category: Photo -->
-                    <div class="card p-5" onclick="toggleCategory('photo')">
-                        <div class="flex items-center justify-between">
-                            <div class="flex items-center gap-3">
-                                <span class="text-3xl">📸</span>
-                                <div>
-                                    <h4 class="font-bold text-slate-800">צילום ווידאו</h4>
-                                    <p class="text-sm text-slate-500">₪16,500 מתוך ₪15,000</p>
-                                </div>
-                            </div>
-                            <div class="text-left">
-                                <p class="text-sm font-bold text-orange-500">+₪1.5K ⚠️</p>
-                                <p class="text-xs text-slate-400">110%</p>
-                            </div>
-                        </div>
-                        <div class="h-2 bg-slate-100 rounded-full overflow-hidden mt-3">
-                            <div class="h-full bg-orange-500" style="width: 100%"></div>
-                        </div>
-                    </div>
-
-                    <!-- Category: Music -->
-                    <div class="card p-5" onclick="toggleCategory('music')">
-                        <div class="flex items-center justify-between">
-                            <div class="flex items-center gap-3">
-                                <span class="text-3xl">🎵</span>
-                                <div>
-                                    <h4 class="font-bold text-slate-800">מוזיקה ובידור</h4>
-                                    <p class="text-sm text-slate-500">₪0 מתוך ₪12,000</p>
-                                </div>
-                            </div>
-                            <button class="bg-indigo-50 text-indigo-600 px-3 py-1 rounded-lg text-sm font-bold">
-                                הוסף ספק
-                            </button>
-                        </div>
-                        <div class="h-2 bg-slate-100 rounded-full overflow-hidden mt-3">
-                            <div class="h-full bg-slate-300" style="width: 0%"></div>
-                        </div>
-                    </div>
-
-                    <!-- Category: Flowers -->
-                    <div class="card p-5" onclick="toggleCategory('flowers')">
-                        <div class="flex items-center justify-between">
-                            <div class="flex items-center gap-3">
-                                <span class="text-3xl">💐</span>
-                                <div>
-                                    <h4 class="font-bold text-slate-800">פרחים ועיצוב</h4>
-                                    <p class="text-sm text-slate-500">₪0 מתוך ₪10,500</p>
-                                </div>
-                            </div>
-                            <button class="bg-indigo-50 text-indigo-600 px-3 py-1 rounded-lg text-sm font-bold">
-                                הוסף ספק
-                            </button>
-                        </div>
-                        <div class="h-2 bg-slate-100 rounded-full overflow-hidden mt-3">
-                            <div class="h-full bg-slate-300" style="width: 0%"></div>
-                        </div>
-                    </div>
-
+                <div id="categories-list" class="space-y-3">
+                    <!-- Categories loaded dynamically -->
                 </div>
 
-                <!-- AI Tip -->
-                <div class="card p-5 bg-blue-50 border-blue-200">
-                    <div class="flex items-start gap-3">
-                        <span class="text-2xl">💡</span>
-                        <div>
-                            <h4 class="font-bold text-blue-900 mb-1">טיפ חכם</h4>
-                            <p class="text-sm text-blue-700">זוגות עם תקציב דומה משלמים בממוצע ₪11K על מוזיקה. אולי כדאי להשוות מחירים?</p>
-                        </div>
+                <button onclick="addCategory()" class="w-full py-4 border-2 border-dashed border-slate-300 rounded-2xl text-slate-500 font-bold">
+                    ➕ הוסף קטגוריה
+                </button>
+
+            </div>
+        </div>
+
+        <!-- ==================== SUPPLIERS TAB ==================== -->
+        <div id="tab-suppliers" class="tab-content">
+            
+            <div class="bg-white p-6 sticky top-0 z-10 shadow-sm">
+                <h1 class="text-2xl font-bold text-slate-800">🔍 ספקים</h1>
+                <p class="text-sm text-slate-500">חפשו והוסיפו ספקים</p>
+            </div>
+
+            <div class="p-4 space-y-4">
+                
+                <!-- Search -->
+                <input type="text" id="vendor-search" placeholder="🔍 חפש ספק..." 
+                       class="w-full px-4 py-3 rounded-2xl border-2 border-slate-200 focus:border-indigo-500 outline-none">
+
+                <!-- Categories Grid -->
+                <div class="grid grid-cols-3 gap-2">
+                    <button class="p-3 bg-white rounded-xl border border-slate-200 text-center">
+                        <div class="text-2xl">🏛️</div>
+                        <div class="text-xs mt-1">אולמות</div>
+                    </button>
+                    <button class="p-3 bg-white rounded-xl border border-slate-200 text-center">
+                        <div class="text-2xl">📸</div>
+                        <div class="text-xs mt-1">צילום</div>
+                    </button>
+                    <button class="p-3 bg-white rounded-xl border border-slate-200 text-center">
+                        <div class="text-2xl">🎵</div>
+                        <div class="text-xs mt-1">DJ</div>
+                    </button>
+                    <button class="p-3 bg-white rounded-xl border border-slate-200 text-center">
+                        <div class="text-2xl">💐</div>
+                        <div class="text-xs mt-1">פרחים</div>
+                    </button>
+                    <button class="p-3 bg-white rounded-xl border border-slate-200 text-center">
+                        <div class="text-2xl">💄</div>
+                        <div class="text-xs mt-1">איפור</div>
+                    </button>
+                    <button class="p-3 bg-white rounded-xl border border-slate-200 text-center">
+                        <div class="text-2xl">👗</div>
+                        <div class="text-xs mt-1">שמלות</div>
+                    </button>
+                </div>
+
+                <!-- My Vendors -->
+                <div class="card p-6">
+                    <div class="flex items-center justify-between mb-4">
+                        <h3 class="font-bold text-slate-800">💼 הספקים שלי</h3>
+                        <button onclick="addVendor()" class="text-indigo-600 text-sm font-bold">+ הוסף</button>
+                    </div>
+                    <div id="my-vendors-list" class="space-y-3">
+                        <!-- Vendors loaded dynamically -->
                     </div>
                 </div>
 
@@ -451,247 +312,60 @@
         <!-- ==================== TASKS TAB ==================== -->
         <div id="tab-tasks" class="tab-content">
             
-            <!-- Header -->
             <div class="bg-white p-6 sticky top-0 z-10 shadow-sm">
                 <h1 class="text-2xl font-bold text-slate-800">📋 משימות</h1>
-                <p class="text-sm text-slate-500">ציר הזמן שלכם לחתונה</p>
+                <button onclick="addTask()" class="text-indigo-600 text-sm font-bold absolute left-6 top-8">+ הוסף</button>
             </div>
 
-            <!-- Filter Tabs -->
             <div class="bg-white px-4 pb-4 flex gap-2 overflow-x-auto">
-                <button class="px-4 py-2 rounded-full bg-indigo-600 text-white text-sm font-bold whitespace-nowrap">הכול</button>
-                <button class="px-4 py-2 rounded-full bg-slate-100 text-slate-600 text-sm font-bold whitespace-nowrap">היום</button>
-                <button class="px-4 py-2 rounded-full bg-slate-100 text-slate-600 text-sm font-bold whitespace-nowrap">השבוע</button>
-                <button class="px-4 py-2 rounded-full bg-orange-100 text-orange-600 text-sm font-bold whitespace-nowrap">באיחור</button>
+                <button class="px-4 py-2 rounded-full bg-indigo-600 text-white text-sm font-bold">הכול</button>
+                <button class="px-4 py-2 rounded-full bg-slate-100 text-slate-600 text-sm font-bold">היום</button>
+                <button class="px-4 py-2 rounded-full bg-slate-100 text-slate-600 text-sm font-bold">השבוע</button>
             </div>
 
             <div class="p-4 space-y-4">
-                
-                <!-- Timeline Progress Indicator -->
-                <div class="text-center mb-6">
-                    <p class="text-sm text-slate-500 mb-2">אתם פה בציר הזמן:</p>
-                    <div class="h-2 bg-slate-200 rounded-full overflow-hidden max-w-xs mx-auto">
-                        <div class="h-full bg-indigo-600" style="width: 60%"></div>
-                    </div>
-                    <p class="text-xs text-slate-400 mt-2">3-6 חודשים לפני החתונה</p>
+                <div id="tasks-list">
+                    <!-- Tasks loaded dynamically -->
                 </div>
-
-                <!-- Timeline Section: 9-12 months -->
-                <div class="card p-5">
-                    <div class="flex items-center gap-3 mb-4">
-                        <div class="w-10 h-10 rounded-full bg-green-100 flex items-center justify-center">
-                            <span class="text-green-600 font-bold">✓</span>
-                        </div>
-                        <div>
-                            <h3 class="font-bold text-slate-800">9-12 חודשים לפני</h3>
-                            <p class="text-xs text-green-600">הושלם 100%</p>
-                        </div>
-                    </div>
-                    <div class="space-y-2 mr-12">
-                        <div class="flex items-center gap-2 text-sm">
-                            <span class="text-green-500">✓</span>
-                            <span class="text-slate-600 line-through">בחרו תאריך ואולם</span>
-                        </div>
-                        <div class="flex items-center gap-2 text-sm">
-                            <span class="text-green-500">✓</span>
-                            <span class="text-slate-600 line-through">צלם ווידאו</span>
-                        </div>
-                        <div class="flex items-center gap-2 text-sm">
-                            <span class="text-green-500">✓</span>
-                            <span class="text-slate-600 line-through">תפריט ראשוני</span>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Timeline Section: 6-9 months -->
-                <div class="card p-5">
-                    <div class="flex items-center gap-3 mb-4">
-                        <div class="w-10 h-10 rounded-full bg-orange-100 flex items-center justify-center">
-                            <span class="text-orange-600 font-bold">⏳</span>
-                        </div>
-                        <div>
-                            <h3 class="font-bold text-slate-800">6-9 חודשים לפני</h3>
-                            <p class="text-xs text-orange-600">בתהליך 33%</p>
-                        </div>
-                    </div>
-                    <div class="space-y-2 mr-12">
-                        <div class="flex items-center gap-2 text-sm">
-                            <span class="text-orange-500">⏳</span>
-                            <span class="text-slate-800 font-semibold">DJ/להקה - לקבוע עד 20/02</span>
-                        </div>
-                        <div class="flex items-center gap-2 text-sm">
-                            <span class="text-slate-300">○</span>
-                            <span class="text-slate-500">שמלת כלה - התחילו לחפש</span>
-                        </div>
-                        <div class="flex items-center gap-2 text-sm">
-                            <span class="text-slate-300">○</span>
-                            <span class="text-slate-500">עיצוב הזמנות</span>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Timeline Section: 3-6 months - CURRENT -->
-                <div class="card p-5 border-2 border-indigo-300 bg-indigo-50">
-                    <div class="flex items-center gap-3 mb-4">
-                        <div class="w-10 h-10 rounded-full bg-indigo-600 flex items-center justify-center animate-pulse">
-                            <span class="text-white font-bold">👉</span>
-                        </div>
-                        <div>
-                            <h3 class="font-bold text-slate-800">3-6 חודשים לפני</h3>
-                            <p class="text-xs text-indigo-600 font-bold">← אתם פה עכשיו!</p>
-                        </div>
-                    </div>
-                    <div class="space-y-3 mr-12">
-                        <div class="bg-white p-3 rounded-xl border-2 border-orange-300">
-                            <div class="flex items-start gap-2">
-                                <input type="checkbox" class="mt-1 w-5 h-5 accent-indigo-600">
-                                <div class="flex-1">
-                                    <p class="font-bold text-slate-800">הדפסת הזמנות</p>
-                                    <p class="text-xs text-orange-600">⚠️ דחוף! צריך להספיק עד סוף החודש</p>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="bg-white p-3 rounded-xl">
-                            <div class="flex items-start gap-2">
-                                <input type="checkbox" class="mt-1 w-5 h-5 accent-indigo-600">
-                                <div class="flex-1">
-                                    <p class="font-semibold text-slate-800">מאפרת ומעצב שיער</p>
-                                    <p class="text-xs text-slate-500">מומלץ לקבוע עכשיו</p>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="bg-white p-3 rounded-xl">
-                            <div class="flex items-start gap-2">
-                                <input type="checkbox" class="mt-1 w-5 h-5 accent-indigo-600">
-                                <div class="flex-1">
-                                    <p class="font-semibold text-slate-800">קבעו עיצוב פרחים</p>
-                                    <p class="text-xs text-slate-500">יש זמן עד חודש הבא</p>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Timeline Section: 1-3 months -->
-                <div class="card p-5 opacity-60">
-                    <div class="flex items-center gap-3 mb-4">
-                        <div class="w-10 h-10 rounded-full bg-slate-200 flex items-center justify-center">
-                            <span class="text-slate-400 font-bold">○</span>
-                        </div>
-                        <div>
-                            <h3 class="font-bold text-slate-600">1-3 חודשים לפני</h3>
-                            <p class="text-xs text-slate-400">טרם הגעתם</p>
-                        </div>
-                    </div>
-                    <div class="space-y-2 mr-12">
-                        <div class="flex items-center gap-2 text-sm text-slate-400">
-                            <span>○</span>
-                            <span>ספירת אורחים סופית</span>
-                        </div>
-                        <div class="flex items-center gap-2 text-sm text-slate-400">
-                            <span>○</span>
-                            <span>פגישה עם כל הספקים</span>
-                        </div>
-                        <div class="flex items-center gap-2 text-sm text-slate-400">
-                            <span>○</span>
-                            <span>תכנון מסלול יום החתונה</span>
-                        </div>
-                    </div>
-                </div>
-
             </div>
         </div>
 
         <!-- ==================== PROFILE TAB ==================== -->
         <div id="tab-profile" class="tab-content">
             
-            <!-- Header -->
             <div class="bg-white p-6 sticky top-0 z-10 shadow-sm">
                 <h1 class="text-2xl font-bold text-slate-800">👤 פרופיל</h1>
-                <p class="text-sm text-slate-500">הגדרות ומידע</p>
             </div>
 
             <div class="p-4 space-y-4">
                 
-                <!-- Wedding Info Card -->
                 <div class="card p-6">
                     <h3 class="font-bold text-slate-800 mb-4">💍 פרטי החתונה</h3>
                     <div class="space-y-3">
                         <div>
                             <label class="text-sm text-slate-500">שם החתן</label>
-                            <input type="text" value="יוסי" class="w-full input-field rounded-xl px-4 py-3 mt-1">
+                            <input type="text" id="groom-name" class="w-full px-4 py-3 mt-1 rounded-xl border-2 border-slate-200 focus:border-indigo-500 outline-none">
                         </div>
                         <div>
                             <label class="text-sm text-slate-500">שם הכלה</label>
-                            <input type="text" value="חן" class="w-full input-field rounded-xl px-4 py-3 mt-1">
+                            <input type="text" id="bride-name" class="w-full px-4 py-3 mt-1 rounded-xl border-2 border-slate-200 focus:border-indigo-500 outline-none">
                         </div>
                         <div>
                             <label class="text-sm text-slate-500">תאריך החתונה</label>
-                            <input type="date" value="2026-08-15" class="w-full input-field rounded-xl px-4 py-3 mt-1">
+                            <input type="date" id="wedding-date" class="w-full px-4 py-3 mt-1 rounded-xl border-2 border-slate-200 focus:border-indigo-500 outline-none">
                         </div>
-                        <button class="w-full btn-primary text-white py-3 rounded-xl font-bold">
+                        <button onclick="saveWeddingDetails()" class="w-full btn-primary text-white py-3 rounded-xl font-bold">
                             שמור שינויים
                         </button>
                     </div>
                 </div>
 
-                <!-- Couple Sync -->
                 <div class="card p-6">
                     <h3 class="font-bold text-slate-800 mb-2">🤝 שיתוף עם בן/בת הזוג</h3>
                     <p class="text-sm text-slate-500 mb-4">שניכם תראו את אותו המידע בזמן אמת</p>
                     <button class="w-full bg-green-100 text-green-700 py-3 rounded-xl font-bold">
                         שלח הזמנה ב-WhatsApp
                     </button>
-                </div>
-
-                <!-- Parent Mode -->
-                <div class="card p-6">
-                    <h3 class="font-bold text-slate-800 mb-2">💝 מצב הורים</h3>
-                    <p class="text-sm text-slate-500 mb-4">שתפו עם ההורים - הם יראו אבל לא יוכלו לערוך</p>
-                    <button class="w-full bg-purple-100 text-purple-700 py-3 rounded-xl font-bold">
-                        שתף עם ההורים
-                    </button>
-                </div>
-
-                <!-- Settings -->
-                <div class="card p-6">
-                    <h3 class="font-bold text-slate-800 mb-4">⚙️ הגדרות</h3>
-                    <div class="space-y-4">
-                        <div class="flex items-center justify-between">
-                            <span class="text-slate-700">התראות</span>
-                            <input type="checkbox" checked class="w-12 h-6 accent-indigo-600">
-                        </div>
-                        <div class="flex items-center justify-between">
-                            <span class="text-slate-700">תזכורות יומיות</span>
-                            <input type="checkbox" checked class="w-12 h-6 accent-indigo-600">
-                        </div>
-                        <div class="flex items-center justify-between">
-                            <span class="text-slate-700">טיפים חכמים</span>
-                            <input type="checkbox" checked class="w-12 h-6 accent-indigo-600">
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Help & Support -->
-                <div class="card p-6">
-                    <h3 class="font-bold text-slate-800 mb-4">📞 עזרה ותמיכה</h3>
-                    <div class="space-y-3">
-                        <button class="w-full text-right text-indigo-600 font-semibold py-2">
-                            מדריך שימוש →
-                        </button>
-                        <button class="w-full text-right text-indigo-600 font-semibold py-2">
-                            שאלות נפוצות →
-                        </button>
-                        <button class="w-full text-right text-indigo-600 font-semibold py-2">
-                            צור קשר עם התמיכה →
-                        </button>
-                    </div>
-                </div>
-
-                <!-- Version -->
-                <div class="text-center text-sm text-slate-400 py-6">
-                    Wedding Elite v1.0.0<br>
-                    Made with 💜 for couples
                 </div>
 
             </div>
@@ -701,158 +375,311 @@
 
     <!-- Bottom Navigation -->
     <div class="fixed bottom-0 left-0 right-0 bg-white border-t border-slate-200 px-4 py-3 flex justify-around items-center shadow-2xl z-50">
-        <button onclick="switchTab('home')" id="nav-home" class="nav-item active flex flex-col items-center smooth-fast">
-            <div class="nav-bg p-2 rounded-2xl smooth-fast">
-                <span class="text-2xl">🏠</span>
-            </div>
-            <span class="text-[10px] font-bold mt-1">בית</span>
+        <button onclick="switchTab('home')" id="nav-home" class="nav-item active flex flex-col items-center">
+            <span class="text-2xl">🏠</span>
+            <span class="text-[10px] font-bold mt-1 text-indigo-600">בית</span>
         </button>
-        
-        <button onclick="switchTab('budget')" id="nav-budget" class="nav-item flex flex-col items-center smooth-fast">
-            <div class="nav-bg p-2 rounded-2xl smooth-fast">
-                <span class="text-2xl">💰</span>
-            </div>
-            <span class="text-[10px] font-bold mt-1">תקציב</span>
+        <button onclick="switchTab('budget')" id="nav-budget" class="nav-item flex flex-col items-center">
+            <span class="text-2xl">💰</span>
+            <span class="text-[10px] font-bold mt-1 text-slate-400">תקציב</span>
         </button>
-        
-        <button onclick="switchTab('tasks')" id="nav-tasks" class="nav-item flex flex-col items-center smooth-fast">
-            <div class="nav-bg p-2 rounded-2xl smooth-fast">
-                <span class="text-2xl">📋</span>
-            </div>
-            <span class="text-[10px] font-bold mt-1">משימות</span>
+        <button onclick="switchTab('suppliers')" id="nav-suppliers" class="nav-item flex flex-col items-center">
+            <span class="text-2xl">🔍</span>
+            <span class="text-[10px] font-bold mt-1 text-slate-400">ספקים</span>
         </button>
-        
-        <button onclick="switchTab('profile')" id="nav-profile" class="nav-item flex flex-col items-center smooth-fast">
-            <div class="nav-bg p-2 rounded-2xl smooth-fast">
-                <span class="text-2xl">👤</span>
-            </div>
-            <span class="text-[10px] font-bold mt-1">פרופיל</span>
+        <button onclick="switchTab('tasks')" id="nav-tasks" class="nav-item flex flex-col items-center">
+            <span class="text-2xl">📋</span>
+            <span class="text-[10px] font-bold mt-1 text-slate-400">משימות</span>
+        </button>
+        <button onclick="switchTab('profile')" id="nav-profile" class="nav-item flex flex-col items-center">
+            <span class="text-2xl">👤</span>
+            <span class="text-[10px] font-bold mt-1 text-slate-400">פרופיל</span>
         </button>
     </div>
 
-    <!-- Floating Action Button -->
-    <button class="fab" onclick="showAddMenu()">
-        <span class="text-white">➕</span>
-    </button>
-
     <script>
-        // ==================== APP STATE ====================
+        // ==================== CONFIG ====================
+        const API_URL = "http://localhost:8000";
+        const WEDDING_ID = localStorage.getItem('wedding_id') || "demo-wedding-1";
+        
+        // ==================== STATE ====================
         let appState = {
-            wedding: {
-                groomName: 'יוסי',
-                brideName: 'חן',
-                date: '2026-08-15',
-                daysLeft: 247
-            },
-            budget: {
-                total: 165000,
-                spent: 148500,
-                categories: []
-            },
-            tasks: {
-                completed: 12,
-                urgent: 3,
-                total: 45
-            }
+            wedding: {},
+            categories: [],
+            tasks: [],
+            vendors: []
         };
 
         // ==================== TAB SWITCHING ====================
         function switchTab(tabName) {
-            // Hide all tabs
-            document.querySelectorAll('.tab-content').forEach(tab => {
-                tab.classList.remove('active');
-            });
-            
-            // Show selected tab
+            document.querySelectorAll('.tab-content').forEach(tab => tab.classList.remove('active'));
             document.getElementById('tab-' + tabName).classList.add('active');
             
-            // Update navigation
             document.querySelectorAll('.nav-item').forEach(item => {
-                item.classList.remove('active');
+                const span = item.querySelector('span:last-child');
+                span.className = 'text-[10px] font-bold mt-1 text-slate-400';
             });
-            document.getElementById('nav-' + tabName).classList.add('active');
+            const activeNav = document.querySelector(`#nav-${tabName} span:last-child`);
+            if (activeNav) activeNav.className = 'text-[10px] font-bold mt-1 text-indigo-600';
+            
+            // Load data for tab
+            if (tabName === 'budget') loadCategories();
+            if (tabName === 'tasks') loadTasks();
+            if (tabName === 'suppliers') loadVendors();
         }
 
-        // ==================== TOAST NOTIFICATIONS ====================
+        // ==================== TOAST ====================
         function showToast(message, icon = '✅') {
             const toast = document.getElementById('toast');
             document.getElementById('toast-icon').textContent = icon;
             document.getElementById('toast-message').textContent = message;
-            
             toast.classList.add('show');
-            
-            setTimeout(() => {
-                toast.classList.remove('show');
-            }, 3000);
+            setTimeout(() => toast.classList.remove('show'), 3000);
         }
 
-        // ==================== FAB MENU ====================
-        function showAddMenu() {
-            // TODO: Show bottom sheet with options
-            alert('אופציות:\n• הוסף ספק\n• הוסף משימה\n• הוסף הוצאה');
+        // ==================== MODAL ====================
+        function showModal(title, content) {
+            document.getElementById('modal-title').textContent = title;
+            document.getElementById('modal-content').innerHTML = content;
+            document.getElementById('modal').classList.add('show');
         }
 
-        // ==================== CATEGORY TOGGLE ====================
-        function toggleCategory(categoryId) {
-            // TODO: Navigate to category details
-            console.log('Opening category:', categoryId);
+        function closeModal() {
+            document.getElementById('modal').classList.remove('show');
         }
 
-        // ==================== COUNTDOWN ANIMATION ====================
-        function updateCountdown() {
-            const weddingDate = new Date('2026-08-15');
-            const today = new Date();
-            const diffTime = Math.abs(weddingDate - today);
-            const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-            
-            document.getElementById('days-left').textContent = diffDays;
-            
-            // Update progress ring
-            const totalDays = 365; // Assuming 1 year planning
-            const progress = ((totalDays - diffDays) / totalDays) * 440; // 440 is circumference
-            document.getElementById('countdown-progress').style.strokeDashoffset = 440 - progress;
+        document.getElementById('modal').addEventListener('click', closeModal);
+
+        // ==================== EDIT FUNCTIONS ====================
+        function editNames() {
+            showModal('ערוך שמות', `
+                <div class="space-y-3">
+                    <input type="text" id="edit-groom" placeholder="שם החתן" class="w-full px-4 py-3 rounded-xl border-2 border-slate-200 focus:border-indigo-500 outline-none">
+                    <input type="text" id="edit-bride" placeholder="שם הכלה" class="w-full px-4 py-3 rounded-xl border-2 border-slate-200 focus:border-indigo-500 outline-none">
+                    <button onclick="saveNames()" class="w-full btn-primary text-white py-3 rounded-xl font-bold">שמור</button>
+                </div>
+            `);
         }
 
-        // ==================== CONTROL METER UPDATE ====================
-        function updateControlMeter() {
-            const completed = appState.tasks.completed;
-            const total = appState.tasks.total;
-            const percentage = Math.round((completed / total) * 100);
+        async function saveNames() {
+            const groom = document.getElementById('edit-groom').value;
+            const bride = document.getElementById('edit-bride').value;
             
-            document.getElementById('control-percent').textContent = percentage + '%';
-            document.getElementById('control-bar').style.width = percentage + '%';
+            // API call would go here
+            document.getElementById('display-names').textContent = `${bride} ו${groom}`;
+            closeModal();
+            showToast('השמות עודכנו!');
+        }
+
+        function editDate() {
+            showModal('שנה תאריך חתונה', `
+                <div class="space-y-3">
+                    <input type="date" id="edit-date" class="w-full px-4 py-3 rounded-xl border-2 border-slate-200 focus:border-indigo-500 outline-none">
+                    <button onclick="saveDate()" class="w-full btn-primary text-white py-3 rounded-xl font-bold">שמור</button>
+                </div>
+            `);
+        }
+
+        function saveDate() {
+            const date = document.getElementById('edit-date').value;
+            // API call + update display
+            closeModal();
+            showToast('התאריך עודכן!');
+        }
+
+        function editBudget() {
+            showModal('עדכן תקציב כולל', `
+                <div class="space-y-3">
+                    <input type="number" id="edit-budget" placeholder="0" class="w-full px-4 py-3 rounded-xl border-2 border-slate-200 focus:border-indigo-500 outline-none">
+                    <button onclick="saveBudget()" class="w-full btn-primary text-white py-3 rounded-xl font-bold">שמור</button>
+                </div>
+            `);
+        }
+
+        function saveBudget() {
+            const amount = document.getElementById('edit-budget').value;
+            // API call + update display
+            closeModal();
+            showToast('התקציב עודכן!');
+        }
+
+        // ==================== CATEGORIES ====================
+        async function loadCategories() {
+            // Mock data for demo
+            const categories = [
+                { id: '1', name: 'אולם ואירוח', icon: '🏛️', planned: 90000, actual: 85000 },
+                { id: '2', name: 'צילום ווידאו', icon: '📸', planned: 15000, actual: 16500 },
+                { id: '3', name: 'מוזיקה ובידור', icon: '🎵', planned: 12000, actual: 0 }
+            ];
             
-            // Update emoji based on control level
-            const emoji = percentage >= 80 ? '😌' : percentage >= 60 ? '😊' : percentage >= 40 ? '😐' : '😰';
-            document.getElementById('control-emoji').textContent = emoji;
+            const html = categories.map(cat => {
+                const percentage = Math.round((cat.actual / cat.planned) * 100);
+                const diff = cat.actual - cat.planned;
+                const diffText = diff > 0 ? `+₪${diff.toLocaleString()}` : diff < 0 ? `-₪${Math.abs(diff).toLocaleString()}` : 'מאוזן';
+                const diffColor = diff > 0 ? 'text-orange-500' : 'text-green-600';
+                
+                return `
+                    <div class="card p-5">
+                        <div class="flex items-center justify-between mb-3">
+                            <div class="flex items-center gap-3">
+                                <span class="text-3xl">${cat.icon}</span>
+                                <div>
+                                    <h4 class="font-bold text-slate-800">${cat.name}</h4>
+                                    <p class="text-sm text-slate-500">₪${cat.actual.toLocaleString()} מתוך ₪${cat.planned.toLocaleString()}</p>
+                                </div>
+                            </div>
+                            <div class="text-left">
+                                <p class="text-sm font-bold ${diffColor}">${diffText}</p>
+                                <p class="text-xs text-slate-400">${percentage}%</p>
+                            </div>
+                        </div>
+                        <div class="h-2 bg-slate-100 rounded-full overflow-hidden">
+                            <div class="h-full ${diff > 0 ? 'bg-orange-500' : 'bg-green-500'}" style="width: ${Math.min(percentage, 100)}%"></div>
+                        </div>
+                        <div class="flex gap-2 mt-3">
+                            <button onclick="editCategory('${cat.id}')" class="flex-1 text-sm text-indigo-600 font-semibold">✏️ ערוך</button>
+                            <button onclick="addVendorToCategory('${cat.id}')" class="flex-1 text-sm text-green-600 font-semibold">+ ספק</button>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+            
+            document.getElementById('categories-list').innerHTML = html;
+        }
+
+        function addCategory() {
+            showModal('הוסף קטגוריה חדשה', `
+                <div class="space-y-3">
+                    <input type="text" id="cat-name" placeholder="שם הקטגוריה" class="w-full px-4 py-3 rounded-xl border-2 border-slate-200 outline-none">
+                    <input type="text" id="cat-icon" placeholder="אימוג'י (🎵)" class="w-full px-4 py-3 rounded-xl border-2 border-slate-200 outline-none">
+                    <input type="number" id="cat-amount" placeholder="₪ תקציב מתוכנן" class="w-full px-4 py-3 rounded-xl border-2 border-slate-200 outline-none">
+                    <button onclick="saveCategory()" class="w-full btn-primary text-white py-3 rounded-xl font-bold">הוסף</button>
+                </div>
+            `);
+        }
+
+        function saveCategory() {
+            // API call to save
+            closeModal();
+            showToast('הקטגוריה נוספה!', '🎉');
+            loadCategories();
+        }
+
+        // ==================== TASKS ====================
+        async function loadTasks() {
+            // Mock data
+            const tasks = [
+                { id: '1', title: 'לשלם מקדמה לצלם', urgent: true, completed: false },
+                { id: '2', title: 'לבחור DJ', urgent: false, completed: false },
+                { id: '3', title: 'להדפיס הזמנות', urgent: true, completed: false }
+            ];
+            
+            const html = tasks.map(task => `
+                <div class="card p-4 flex items-start gap-3">
+                    <input type="checkbox" ${task.completed ? 'checked' : ''} 
+                           onchange="toggleTask('${task.id}')" 
+                           class="mt-1 w-5 h-5 accent-indigo-600">
+                    <div class="flex-1">
+                        <p class="font-semibold text-slate-800 ${task.completed ? 'line-through' : ''}">${task.title}</p>
+                        ${task.urgent ? '<p class="text-xs text-orange-600 mt-1">⚠️ דחוף!</p>' : ''}
+                    </div>
+                    <button onclick="deleteTask('${task.id}')" class="text-red-500">🗑️</button>
+                </div>
+            `).join('');
+            
+            document.getElementById('tasks-list').innerHTML = html;
+        }
+
+        function addTask() {
+            showModal('הוסף משימה חדשה', `
+                <div class="space-y-3">
+                    <input type="text" id="task-title" placeholder="כותרת המשימה" class="w-full px-4 py-3 rounded-xl border-2 border-slate-200 outline-none">
+                    <textarea id="task-desc" placeholder="תיאור (אופציונלי)" class="w-full px-4 py-3 rounded-xl border-2 border-slate-200 outline-none" rows="3"></textarea>
+                    <input type="date" id="task-date" class="w-full px-4 py-3 rounded-xl border-2 border-slate-200 outline-none">
+                    <label class="flex items-center gap-2">
+                        <input type="checkbox" id="task-urgent" class="w-5 h-5 accent-indigo-600">
+                        <span class="text-sm">סמן כדחוף</span>
+                    </label>
+                    <button onclick="saveTask()" class="w-full btn-primary text-white py-3 rounded-xl font-bold">הוסף משימה</button>
+                </div>
+            `);
+        }
+
+        function saveTask() {
+            // API call
+            closeModal();
+            showToast('המשימה נוספה!', '✅');
+            loadTasks();
+        }
+
+        function toggleTask(taskId) {
+            // API call to toggle
+            showToast('המשימה עודכנה!');
+        }
+
+        function deleteTask(taskId) {
+            if (confirm('למחוק משימה זו?')) {
+                // API call to delete
+                showToast('המשימה נמחקה', '🗑️');
+                loadTasks();
+            }
+        }
+
+        // ==================== VENDORS ====================
+        async function loadVendors() {
+            // Mock data
+            const vendors = [
+                { id: '1', name: 'אקוודור אירועים', category: 'אולם', amount: 85000 },
+                { id: '2', name: 'לייט סטודיו', category: 'צילום', amount: 16500 }
+            ];
+            
+            const html = vendors.map(v => `
+                <div class="flex items-center justify-between p-3 bg-slate-50 rounded-xl">
+                    <div>
+                        <p class="font-semibold text-slate-800">${v.name}</p>
+                        <p class="text-xs text-slate-500">${v.category} • ₪${v.amount.toLocaleString()}</p>
+                    </div>
+                    <button onclick="editVendor('${v.id}')" class="text-indigo-600">✏️</button>
+                </div>
+            `).join('');
+            
+            document.getElementById('my-vendors-list').innerHTML = html || '<p class="text-center text-slate-400 py-4">אין ספקים עדיין</p>';
+        }
+
+        function addVendor() {
+            showModal('הוסף ספק חדש', `
+                <div class="space-y-3">
+                    <select id="vendor-category" class="w-full px-4 py-3 rounded-xl border-2 border-slate-200 outline-none">
+                        <option>בחר קטגוריה...</option>
+                        <option>🏛️ אולם</option>
+                        <option>📸 צילום</option>
+                        <option>🎵 DJ</option>
+                        <option>💐 פרחים</option>
+                    </select>
+                    <input type="text" id="vendor-name" placeholder="שם הספק" class="w-full px-4 py-3 rounded-xl border-2 border-slate-200 outline-none">
+                    <input type="number" id="vendor-amount" placeholder="₪ סכום" class="w-full px-4 py-3 rounded-xl border-2 border-slate-200 outline-none">
+                    <button onclick="saveVendor()" class="w-full btn-primary text-white py-3 rounded-xl font-bold">הוסף ספק</button>
+                </div>
+            `);
+        }
+
+        function saveVendor() {
+            // API call
+            closeModal();
+            showToast('הספק נוסף!', '🎉');
+            loadVendors();
         }
 
         // ==================== INIT ====================
         document.addEventListener('DOMContentLoaded', function() {
-            updateCountdown();
-            updateControlMeter();
+            // Load initial data
+            loadCategories();
+            loadTasks();
+            loadVendors();
             
-            // Show welcome toast
-            setTimeout(() => {
-                showToast('ברוכים הבאים! בואו נתחיל 💕', '🎉');
-            }, 1000);
+            // Show welcome
+            setTimeout(() => showToast('ברוכים הבאים! 💕', '🎉'), 500);
         });
-
-        // ==================== API CALLS (TODO) ====================
-        // These would connect to your backend
-        async function loadBudgetData() {
-            // TODO: Fetch from API
-        }
-
-        async function loadTasks() {
-            // TODO: Fetch from API
-        }
-
-        async function saveBudgetItem(item) {
-            // TODO: POST to API
-            showToast('הספק נוסף בהצלחה! 🎉');
-        }
-
     </script>
 
 </body>
