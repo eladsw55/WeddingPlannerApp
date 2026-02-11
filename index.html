@@ -8,7 +8,7 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Assistant:wght@300;400;600;700;800&display=swap" rel="stylesheet">
     <style>
-        body { font-family: 'Assistant', sans-serif; background: #f8fafc; padding-bottom: 100px; }
+        body { font-family: 'Assistant', sans-serif; background: #f8fafc; padding-bottom: 120px; }
         .glass-card { background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(12px); border-radius: 30px; border: 1px solid rgba(255,255,255,0.3); box-shadow: 0 10px 30px rgba(0,0,0,0.05); }
         .dark-stats { background: #1a2233; color: white; border-radius: 35px; }
         .tab-content { display: none; }
@@ -17,80 +17,87 @@
         .nav-active div { background: rgba(79, 70, 229, 0.2); transform: scale(1.1); }
         .nav-active span { color: white !important; }
         .chart-center { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); text-align: center; }
+        .btn-update { transition: all 0.2s ease; cursor: pointer; }
+        .btn-update:active { transform: scale(0.9); }
     </style>
 </head>
 <body>
 
-    <div id="hero-section" class="max-w-6xl mx-auto px-4 py-12 text-center">
-        <h1 class="text-5xl md:text-7xl font-black text-slate-800 mb-6 tracking-tight">מתכננים חתונה?<br><span class="text-indigo-600">תשלטו במספרים.</span></h1>
-        <p class="text-lg text-slate-500 max-w-2xl mx-auto mb-10 font-medium">האפליקציה החכמה לניהול תקציב ומשימות. פשוט, מהיר ובלי אקסלים.</p>
+    <div id="hero-section" class="max-w-6xl mx-auto px-4 py-16 text-center">
+        <h1 class="text-5xl md:text-7xl font-black text-slate-800 mb-6 tracking-tight">מתכננים חתונה?<br><span class="text-indigo-600 font-extrabold italic uppercase italic tracking-tighter">תתחילו לשלוט במספרים.</span></h1>
+        <p class="text-lg text-slate-500 max-w-2xl mx-auto mb-10 font-medium leading-relaxed">האפליקציה החכמה שעוזרת לכם לנהל תקציב, משימות וספקים במקום אחד. בלי אקסלים ובלי הפתעות.</p>
         <button onclick="scrollToApp()" class="bg-indigo-600 text-white px-10 py-5 rounded-2xl text-xl font-black shadow-2xl hover:bg-indigo-700 transition w-full md:w-auto">התחילו לתכנן בחינם 💍</button>
     </div>
 
     <div id="app-anchor" class="max-w-6xl mx-auto px-4">
-        <div id="tab-home" class="tab-content active">
-            <div class="dark-stats p-10 mb-8 flex flex-col items-center relative">
+        
+        <div id="tab-home" class="tab-content active space-y-8">
+            <div class="dark-stats p-10 flex flex-col items-center relative shadow-2xl overflow-hidden">
                 <p class="text-indigo-400 text-[10px] font-bold uppercase tracking-widest mb-2 text-center">יתרה לשימוש חופשי</p>
-                <h3 id="rem-budget" class="text-5xl font-black text-white mb-8">₪0</h3>
-                <div class="relative w-full max-w-[250px]">
+                <h3 id="rem-budget" class="text-5xl font-black text-white mb-8 tracking-tighter">₪0</h3>
+                <div class="relative w-full max-w-[280px]">
                     <canvas id="mainChart"></canvas>
                     <div class="chart-center">
-                        <p id="pct-val" class="text-4xl font-black">0%</p>
-                        <p class="text-[8px] uppercase font-bold text-indigo-300">מוכנות</p>
+                        <p id="pct-val" class="text-5xl font-black">0%</p>
+                        <p class="text-[8px] uppercase font-bold text-indigo-300 tracking-[0.2em]">החתונה מוכנה</p>
                     </div>
                 </div>
             </div>
-            <div class="grid grid-cols-2 gap-4 mb-8">
+
+            <div class="grid grid-cols-2 gap-4">
                 <div class="glass-card p-6 text-center">
-                    <p class="text-gray-400 text-[10px] uppercase font-bold">השקעה לאורח</p>
-                    <p id="guest-cost" class="text-xl font-bold text-indigo-600">₪0</p>
+                    <p class="text-gray-400 text-[10px] uppercase font-bold mb-1 italic">השקעה לאורח</p>
+                    <p id="guest-cost" class="text-2xl font-black text-indigo-600 tracking-tighter">₪0</p>
                 </div>
                 <div class="glass-card p-6 text-center">
-                    <p class="text-gray-400 text-[10px] uppercase font-bold">אורחים</p>
-                    <input id="guest-count" type="number" onchange="updateUI()" class="bg-transparent text-xl font-bold text-center w-full outline-none" value="400">
+                    <p class="text-gray-400 text-[10px] uppercase font-bold mb-1 italic">כמות מוזמנים</p>
+                    <input id="guest-count" type="number" onchange="updateUI()" class="bg-transparent text-2xl font-black text-center w-full outline-none text-slate-700" value="400">
                 </div>
             </div>
         </div>
 
-        <div id="tab-budget" class="tab-content space-y-4">
-            <h2 class="text-2xl font-black text-slate-800 mb-6">פירוט תקציב</h2>
-            <div class="glass-card p-6 mb-6 bg-slate-800 text-white">
-                <p class="text-xs text-gray-400 mb-1">הגדרת תקציב יעד</p>
-                <div class="flex gap-2">
-                    <input id="total-target" type="number" class="bg-transparent text-2xl font-bold w-full outline-none" placeholder="₪0">
-                    <button onclick="updateBudgetTotal()" class="bg-emerald-500 px-4 py-2 rounded-xl text-xs font-bold">עדכן</button>
+        <div id="tab-budget" class="tab-content space-y-6">
+            <h2 class="text-3xl font-black text-slate-800 mb-6 font-black italic uppercase italic tracking-tighter">ניהול <span class="text-indigo-600 font-extrabold italic uppercase italic tracking-tighter">תקציב</span></h2>
+            
+            <div class="glass-card p-6 mb-8 bg-slate-900 text-white border-none">
+                <p class="text-xs text-indigo-300 font-bold uppercase tracking-widest mb-2">הגדרת תקציב יעד כולל</p>
+                <div class="flex gap-3">
+                    <input id="total-target" type="number" class="bg-transparent text-3xl font-black w-full outline-none text-white font-mono" placeholder="0">
+                    <button onclick="updateBudgetTotal()" class="bg-emerald-500 hover:bg-emerald-400 px-6 py-2 rounded-2xl text-sm font-bold shadow-lg btn-update transition">עדכן ✅</button>
                 </div>
             </div>
-            <div id="cat-list" class="space-y-4"></div>
+
+            <div id="cat-list" class="space-y-4">
+                </div>
         </div>
 
         <div id="tab-tasks" class="tab-content">
-            <h2 class="text-2xl font-black text-slate-800 mb-6 font-black italic uppercase italic tracking-tighter">צ'ק-ליסט משימות</h2>
-            <div class="glass-card p-8 text-center text-gray-400">המשימות שלכם יופיעו כאן בקרוב...</div>
+            <h2 class="text-3xl font-black text-slate-800 mb-6 font-black italic uppercase italic tracking-tighter">צ'ק-ליסט <span class="text-indigo-600 font-extrabold italic uppercase italic tracking-tighter">משימות</span></h2>
+            <div class="glass-card p-12 text-center text-gray-400 font-medium italic">הכנת הצ'ק-ליסט החכם שלך בביצוע...</div>
         </div>
 
         <div id="tab-guests" class="tab-content">
-            <h2 class="text-2xl font-black text-slate-800 mb-6 font-black italic uppercase italic tracking-tighter">רשימת מוזמנים</h2>
-            <div class="glass-card p-8 text-center text-gray-400">ניהול האורחים יהיה זמין בגרסה הבאה.</div>
+            <h2 class="text-3xl font-black text-slate-800 mb-6 font-black italic uppercase italic tracking-tighter">רשימת <span class="text-indigo-600 font-extrabold italic uppercase italic tracking-tighter">מוזמנים</span></h2>
+            <div class="glass-card p-12 text-center text-gray-400 font-medium italic">ניהול האורחים יהיה זמין בגרסה הקרובה.</div>
         </div>
     </div>
 
-    <div class="fixed bottom-6 left-1/2 -translate-x-1/2 w-[92%] max-w-md bg-[#1a2233]/95 backdrop-blur-xl rounded-[32px] py-3 px-6 shadow-2xl z-50 flex justify-between items-center border border-white/10 md:hidden">
-        <button onclick="switchTab('tab-home')" id="nav-home" class="nav-item nav-active flex flex-col items-center gap-1 transition-all duration-300">
-            <div class="p-2.5 rounded-2xl text-lg transition-all">🏠</div>
-            <span class="text-[9px] font-bold text-gray-400">ראשי</span>
+    <div class="fixed bottom-6 left-1/2 -translate-x-1/2 w-[92%] max-w-md bg-[#1a2233]/95 backdrop-blur-xl rounded-[35px] py-4 px-8 shadow-2xl z-50 flex justify-between items-center border border-white/10 md:hidden">
+        <button onclick="switchTab('tab-home')" id="nav-home" class="nav-item nav-active flex flex-col items-center gap-1 transition-all">
+            <div class="p-2.5 rounded-2xl text-xl transition-all">🏠</div>
+            <span class="text-[9px] font-bold text-gray-400 tracking-tighter">ראשי</span>
         </button>
-        <button onclick="switchTab('tab-budget')" id="nav-budget" class="nav-item flex flex-col items-center gap-1 transition-all duration-300">
-            <div class="p-2.5 rounded-2xl text-lg transition-all">💰</div>
-            <span class="text-[9px] font-bold text-gray-400">תקציב</span>
+        <button onclick="switchTab('tab-budget')" id="nav-budget" class="nav-item flex flex-col items-center gap-1 transition-all">
+            <div class="p-2.5 rounded-2xl text-xl transition-all">💰</div>
+            <span class="text-[9px] font-bold text-gray-400 tracking-tighter">תקציב</span>
         </button>
-        <button onclick="switchTab('tab-tasks')" id="nav-tasks" class="nav-item flex flex-col items-center gap-1 transition-all duration-300">
-            <div class="p-2.5 rounded-2xl text-lg transition-all">✅</div>
-            <span class="text-[9px] font-bold text-gray-400">משימות</span>
+        <button onclick="switchTab('tab-tasks')" id="nav-tasks" class="nav-item flex flex-col items-center gap-1 transition-all">
+            <div class="p-2.5 rounded-2xl text-xl transition-all">✅</div>
+            <span class="text-[9px] font-bold text-gray-400 tracking-tighter">משימות</span>
         </button>
-        <button onclick="switchTab('tab-guests')" id="nav-guests" class="nav-item flex flex-col items-center gap-1 transition-all duration-300">
-            <div class="p-2.5 rounded-2xl text-lg transition-all">👥</div>
-            <span class="text-[9px] font-bold text-gray-400">אורחים</span>
+        <button onclick="switchTab('tab-guests')" id="nav-guests" class="nav-item flex flex-col items-center gap-1 transition-all">
+            <div class="p-2.5 rounded-2xl text-xl transition-all">👥</div>
+            <span class="text-[9px] font-bold text-gray-400 tracking-tighter">אורחים</span>
         </button>
     </div>
 
@@ -99,24 +106,23 @@
         let myChart;
         let localData = { spent: 0, total: 0 };
         
+        // כל הקטגוריות והפריטים שהיו בגרסה הקודמת
         const cats = [
-            { name: 'אולם וקייטרינג', icon: '🏛️', items: ['מנה מבוגר', 'עיצוב', 'הגברה'] },
-            { name: 'ספקים', icon: '📷', items: ['DJ', 'צלם סטילס', 'צלם וידאו'] },
-            { name: 'לוק וסטייל', icon: '👰', items: ['שמלה', 'חליפה', 'איפור ושיער'] }
+            { name: 'המקום והאווירה', icon: '🏛️', items: ['אולם אירועים', 'עיצוב חופה', 'תאורה והגברה', 'בר בסיסי'] },
+            { name: 'קולינריה', icon: '🍽️', items: ['קייטרינג', 'בר אלכוהול משודרג', 'עמדת מתוקים', 'טעימות'] },
+            { name: 'מוזיקה ובידור', icon: '🎵', items: ['DJ', 'להקת קבלת פנים', 'אטרקציות ואפקטים'] },
+            { name: 'תיעוד ומדיה', icon: '📷', items: ['צלם סטילס', 'צלם וידאו', 'רחפן', 'מגנטים'] },
+            { name: 'כלה וחתן', icon: '👰🤵', items: ['שמלת כלה', 'חליפת חתן', 'איפור ושיער', 'טבעות'] }
         ];
 
         function switchTab(tabId) {
-            // Hide all contents
             document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
-            // Deactivate all nav items
             document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('nav-active'));
             
-            // Show selected
             document.getElementById(tabId).classList.add('active');
             const navId = 'nav-' + tabId.split('-')[1];
             document.getElementById(navId).classList.add('nav-active');
 
-            // Scroll to top of app
             if(window.innerWidth < 768) {
                 document.getElementById('app-anchor').scrollIntoView({ behavior: 'smooth' });
             }
@@ -129,14 +135,16 @@
                 const res = await fetch(`${API}/budget/summary`);
                 localData = await res.json();
                 updateUI();
-            } catch (e) { console.error("Sync error"); }
+            } catch (e) { console.error("Sync Error"); }
         }
 
         function updateUI() {
             const rem = localData.total - localData.spent;
             const guests = parseInt(document.getElementById('guest-count').value) || 1;
             document.getElementById('rem-budget').innerText = `₪${rem.toLocaleString()}`;
-            document.getElementById('pct-val').innerText = `${Math.round((localData.spent/localData.total)*100 || 0)}%`;
+            document.getElementById('total-target').value = localData.total > 0 ? localData.total : "";
+            const pct = localData.total > 0 ? Math.round((localData.spent/localData.total)*100) : 0;
+            document.getElementById('pct-val').innerText = `${pct}%`;
             document.getElementById('guest-cost').innerText = `₪${Math.round(localData.spent/guests)}`;
             draw();
         }
@@ -147,41 +155,47 @@
             refresh();
         }
 
-        function draw() {
-            const ctx = document.getElementById('mainChart').getContext('2d');
-            if (myChart) myChart.destroy();
-            myChart = new Chart(ctx, {
-                type: 'doughnut',
-                data: { datasets: [{ data: [localData.spent, Math.max(0, localData.total - localData.spent)], backgroundColor: ['#6366f1', 'rgba(255,255,255,0.05)'], borderWidth: 0, borderRadius: 10 }] },
-                options: { cutout: '85%', plugins: { legend: { display: false } } }
-            });
-        }
-
-        // Initialize App
-        function initApp() {
-            const container = document.getElementById('cat-list');
-            cats.forEach(c => {
-                container.innerHTML += `
-                    <div class="glass-card p-6">
-                        <div class="flex items-center gap-3 mb-4 font-bold text-slate-700">${c.icon} ${c.name}</div>
-                        ${c.items.map(item => `
-                            <div class="flex justify-between items-center py-2 border-t border-gray-100">
-                                <span class="text-sm text-gray-500">${item}</span>
-                                <input type="number" onblur="saveExp('${item}', this.value)" class="w-20 text-center font-bold text-indigo-600 outline-none" placeholder="₪0">
-                            </div>
-                        `).join('')}
-                    </div>
-                `;
-            });
-            refresh();
-        }
-
         async function saveExp(cat, val) {
             if(!val) return;
             await fetch(`${API}/budget/add`, {
                 method: 'POST',
                 headers: {'Content-Type': 'application/json'},
                 body: JSON.stringify({category: cat, amount: val})
+            });
+            refresh();
+        }
+
+        function draw() {
+            const ctx = document.getElementById('mainChart').getContext('2d');
+            if (myChart) myChart.destroy();
+            const rem = Math.max(0, localData.total - localData.spent);
+            myChart = new Chart(ctx, {
+                type: 'doughnut',
+                data: { datasets: [{ data: [localData.spent, rem], backgroundColor: ['#6366f1', 'rgba(255,255,255,0.05)'], borderWidth: 0, borderRadius: 12 }] },
+                options: { cutout: '82%', plugins: { legend: { display: false } }, animation: { duration: 1500, easing: 'easeOutQuart' } }
+            });
+        }
+
+        function initApp() {
+            const container = document.getElementById('cat-list');
+            cats.forEach(c => {
+                container.innerHTML += `
+                    <div class="glass-card p-6 shadow-sm border-r-4 border-indigo-400 transition hover:shadow-md">
+                        <div class="flex items-center gap-4 mb-5 font-black text-slate-700 text-lg uppercase tracking-tighter">${c.icon} ${c.name}</div>
+                        <div class="space-y-4">
+                            ${c.items.map(item => `
+                                <div class="flex justify-between items-center py-3 border-t border-slate-50 hover:bg-slate-50/50 transition rounded-xl px-2">
+                                    <span class="text-sm font-bold text-slate-500 italic">${item}</span>
+                                    <div class="flex items-center gap-2">
+                                        <input type="number" onblur="saveExp('${item}', this.value)" 
+                                               class="w-24 text-center font-black text-indigo-600 outline-none bg-white rounded-lg py-1 border border-slate-100 shadow-inner" 
+                                               placeholder="₪0">
+                                    </div>
+                                </div>
+                            `).join('')}
+                        </div>
+                    </div>
+                `;
             });
             refresh();
         }
